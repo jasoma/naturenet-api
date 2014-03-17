@@ -37,7 +37,7 @@ import json
 @app.route('/users.json')
 def users_json():
 	users = User.query.all()
-	json_string = json.dumps([{'name': u.name, 'avartarName': u.avatarName} for u in users])
+	json_string = json.dumps([{'id': u.id, 'name': u.name, 'avartarName': u.avatarName} for u in users])
 	return json_string
 
 

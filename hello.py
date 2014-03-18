@@ -57,6 +57,7 @@ class Note(db.Model):
 	comment = db.Column(db.Text, unique=False)
 	user_uid = db.Column(db.BigInteger, ForeignKey('user.uid'))
 	landmark_uid = db.Column(db.Integer, ForeignKey('landmark.uid'))
+	activity_uid = db.Column(db.Integer, ForeignKey('activity.uid'))
 	longitude = db.Column(db.String(20), unique=False)
 	latitude = db.Column(db.String(20), unique=False)
 	categories = db.Column(db.String(80), unique=False)	
@@ -156,7 +157,7 @@ def notes_json():
 	notes = Note.query.all()
 	json_string = json.dumps([{'uid': u.uid, "comment" : u.comment,
 		"longitude" : u.longitude, "latitude" : u.latitude, "categories" : u.categories, "user_uid" : u.user_uid, 
-		"landmark_uid" : u.landmark_uid, "fileId" : u.fileId
+		"landmark_uid" : u.landmark_uid, "activity_uid" : u.activity_uid, "fileId" : u.fileId
 		 } for u in notes])
 	return json_string
 
@@ -174,6 +175,7 @@ def notes_new():
 		newNote.categories = obj['categories']	
 		newNote.user_uid = obj['user_uid']
 		newNote.landmark_uid = obj['landmark_uid']
+		newNote.activity_uid = obj['activity_uid']
 		newNote.fileId = obj['fileId']
 		db.session.add(newNote)
 		db.session.commit()

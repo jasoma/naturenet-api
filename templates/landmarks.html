@@ -1,13 +1,9 @@
-{% extends "bootstrap/base.html" %}
-{% block title %}NN - Users{% endblock %}
+{% extends "main.html" %}
+{% block title %} NatureNet@ACES - Landmarks {% endblock %}
 
-{% block navbar %}
-{% endblock %}
+{% block inner_content %}
 
-{% block content %}
-<div class="container">
-
-<h1>Landmarks</h1>
+<h1>Places</h1>
 {% for landmark in landmarks %}
 	<div class="row panel">
 		<div class="col-xs-4">    	
@@ -20,7 +16,5 @@
 		</div>
 	</div>
 {% endfor %}
-
-</div>
 
 {% endblock %}

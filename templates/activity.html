@@ -1,14 +1,15 @@
 {% extends "main.html" %}
-{% block title %} NatureNet@ACES - {{landmark.name}} {% endblock %}
+{% block title %} NatureNet@ACES - {{activity.name}} {% endblock %}
 
 {% block inner_content %}
 
-	<a href="/landmarks/list">Places</a> > {{landmark.name}}
+	<a href="/activities/list">Activities</a> > {{activity.name}}
 	
-    <h2>{{landmark.name}}<h2>
-    <img height="100" src="/static/landmark_{{landmark.uid | lower}}.png">
+    <h2>{{activity.name}}</h2>    
 
-    <h3>Field notes associated with this place </h3>
+    {{activity.description | replace('\n','<p>') | safe}}
+
+    <h3>Field notes associated with this activity</h3>
     {% for note in notes %}
     	<div class="col-xs-3">           
     	<a herf="#" class="thumbnail">

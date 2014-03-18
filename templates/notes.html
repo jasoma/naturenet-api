@@ -1,17 +1,27 @@
-{% extends "bootstrap/base.html" %}
-{% block title %}This is an example page{% endblock %}
+{% extends "main.html" %}
+{% block title %}NatureNet@ACES - Field Notes{% endblock %}
 
-{% block navbar %}
-{% endblock %}
 
-{% block content %}
-{% for note in notes %}
+{% block inner_content %}
+
+<h1>Field Notes</h1>
+
 <div class="row">
-	<div class="col-xs-6">
-	<div class="thumbnail">
-    <img width="200" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
+{% for note in notes %}
+ 
+	<div class="col-xs-2 thumbnail">	
+		<a href="/notes/{{note.uid}}/view">
+    		<img height="50px" src="http://drive.google.com/uc?export=view&id={{note.fileId}}">	
+    	</a>
+		<a href="/users/{{note.user.uid}}/view">{{note.user.name}}</a><br>
+		{{note.landmark.name}}<br>
+		{{note.activity.name}}
 	</div>
-</div>
-</div>
+
 {% endfor %}
+</div>
+
+</div>
+
+
 {% endblock %}

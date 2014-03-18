@@ -63,6 +63,10 @@ class Note(db.Model):
 	categories = db.Column(db.String(80), unique=False)	
 	fileId = db.Column(db.String(80))
 
+	landmark = relationship("Landmark")
+	user = relationship("User")
+	activity = relationship("Activity")
+
 	def __init__(self, uid):
 		self.uid = uid
 
@@ -134,6 +138,16 @@ def activities_json():
 	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description} for u in activities])
 	return json_string
 
+@app.route('/activities/list')
+def activities_list():
+	activities = Activity.query.all()	
+	return render_template('activities.html', activities=activities)
+
+@app.route('/activities/<uid>/view')
+def activity_view(uid):
+	activity = Activity.query.get(uid)
+	notes = Note.query.filter_by(activity_uid=uid).all();
+	return render_template('activity.html', activity=activity, notes=notes)
 
 @app.route('/landmarks/list.json')
 def landmarks_json():
@@ -197,6 +211,11 @@ def notes_update(uid):
 		return json.dumps({'success': True})
 	else:		
 		return json.dumps({'error': "%s is not a valid uid for this note" % uid})		
+
+@app.route('/notes/<uid>/view')
+def notes_view(uid):
+	note = Note.query.get(uid)
+	return render_template('note.html', note=note)
 
 @app.route('/notes/list')
 def notes_list():

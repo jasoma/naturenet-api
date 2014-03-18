@@ -1,31 +1,22 @@
-{% extends "bootstrap/base.html" %}
+{% extends "main.html" %}
 {% block title %}NN - Users{% endblock %}
 
-{% block navbar %}
-{% endblock %}
 
-{% block content %}
-<div class="container">
-
+{% block inner_content %}
 <div class="row">
 	<div class="col-xs-6">
-    <h2>{{user.name}}<h2>
-    <img width=100 src="/static/{{user.avatarName | lower}}.png">
+	    <h2>{{user.name}}<h2>
+	    <img width=100 src="/static/{{user.avatarName | lower}}.png">
 
-    <h2>Notes</h2>
-    <div class="row">
-    {% for note in notes %}
-    	<div class="col-xs-4">           
+	    <h3>Field notes contributed by this person </h3>
+    	{% for note in notes %}
+    	<div class="col-xs-3">           
     	<a herf="#" class="thumbnail">
 			<img width="100" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
 		</a>
 		</div>
-	{% endfor %}
-	</div>
+		{% endfor %}
 
 	</div>
 </div>
-
-</div>
-
 {% endblock %}

@@ -1,0 +1,33 @@
+{% extends "main.html" %}
+{% block title %} NatureNet@ACES - Field Note {% endblock %}
+
+{% block inner_content %}
+
+	<div class="col-xs-5 thumbnail">	
+		<a href="/notes/{{note.uid}}/view">
+    		<img height="50px" src="http://drive.google.com/uc?export=view&id={{note.fileId}}">	
+    	</a>
+    </div>
+    <div class="col-xs-5">
+    	<h4>Contributor</h4>
+
+		<div class="row">
+		<div class="col-xs-2">    	
+    		<img height="50" src="/static/{{note.user.avatarName | lower}}.png">
+		</div>
+		<div class="col-xs-8">
+			<h4><a href="/users/{{note.user.uid}}/view">{{note.user.name}}</a></h4>
+		</div>
+		</div>
+		
+		<h4>Place</h4>
+		{{note.landmark.name}}
+		<h4>Activity</h4>
+		{{note.activity.name}}
+		<h4>Comment</h4>
+		<div class="well">{{note.comment}}</div>
+		<h4>Categories</h4>
+		<div class="well">{{note.categories}}</div>
+	</div>
+
+{% endblock %}

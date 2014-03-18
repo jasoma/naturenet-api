@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask import request
 from flask import render_template
+from flask_bootstrap import Bootstrap
 
 from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
@@ -11,6 +12,7 @@ import psycopg2
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+Bootstrap(app)
 
 db = SQLAlchemy(app)
 
@@ -35,10 +37,8 @@ class Landmark(db.Model):
 	uid = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(80), unique=False)
 	description = db.Column(db.Text, unique=False)
-	top = db.Column(db.Integer, unique=False)
-	bottom = db.Column(db.Integer, unique=False)
-	left = db.Column(db.Integer, unique=False)
-	right = db.Column(db.Integer, unique=False)
+	x = db.Column(db.Integer, unique=False)
+	y = db.Column(db.Integer, unique=False)
 
 	def __init__(self, uid):
 		self.uid = uid
@@ -95,7 +95,7 @@ def users_add():
 @app.route('/landmarks/list.json')
 def landmarks_json():
 	landmarks = Landmark.query.all()
-	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description, "top" : u.top, "bottom" : u.bottom, "left" : u.left, "right" : u.right } for u in landmarks])
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description, "x" : u.x, "y" : u.y} for u in landmarks])
 	return json_string
 
 @app.route('/landmarks/list')
@@ -132,6 +132,11 @@ def notes_new():
 	else:
 		print "user id [%d] already exists" % long(uid)
 		return json.dumps({'success': False})
+
+@app.route('/notes/list')
+def notes_list():
+	notes = Note.query.all()
+	return render_template('notes.html', notes=notes)
 
 if __name__ == '__main__':
     app.run(debug  = True)

@@ -55,20 +55,31 @@ class Landmark(db.Model):
 class Note(db.Model):
 	uid = db.Column(db.BigInteger, primary_key=True)
 	comment = db.Column(db.Text, unique=False)
-	user_uid = db.Column(db.BigInteger, ForeignKey('users.uid'))
-	landmark_uid = db.Column(db.Integer, ForeignKey('landmarks.uid'))
+	user_uid = db.Column(db.BigInteger, ForeignKey('user.uid'))
+	landmark_uid = db.Column(db.Integer, ForeignKey('landmark.uid'))
 	longitude = db.Column(db.String(20), unique=False)
 	latitude = db.Column(db.String(20), unique=False)
 	categories = db.Column(db.String(80), unique=False)	
 	fileId = db.Column(db.String(80))
-
-	#user = relationship("User", backref=backref('notes', order_by=uid))
 
 	def __init__(self, uid):
 		self.uid = uid
 
 	def __repr__(self):
 		return '<Note %r>' % self.__dict__		
+
+
+class Activity(db.Model):
+	uid = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(80), unique=False)
+	description = db.Column(db.Text, unique=False)
+
+	def __init__(self, uid):
+		self.uid = uid
+
+	def __repr__(self):
+		return '<Activity %r>' % self.__dict__		
+
 
 @app.route('/')
 def hello():
@@ -148,6 +159,7 @@ def notes_new():
 	uid = obj['uid']
 
 	if not Note.query.get(long(uid)):
+		print obj
 		newNote = Note(long(uid))		
 		newNote.comment = obj['comment']
 		newNote.longitude = obj['longitude']

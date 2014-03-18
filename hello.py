@@ -11,12 +11,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_
 db = SQLAlchemy(app)
 
 class User(db.Model):
-    id = db.Column(db.BigInteger, primary_key=True)
+    uid = db.Column(db.BigInteger, primary_key=True)
     name = db.Column(db.String(80), unique=False)
     avatarName = db.Column(db.String(80), unique=False)
 
-    def __init__(self, id, name, avatarName):
-    	self.id = id
+    def __init__(self, uid, name, avatarName):
+    	self.uid = uid
         self.name = name
         self.avatarName = avatarName
 
@@ -24,7 +24,7 @@ class User(db.Model):
         return '<User %r>' % self.name
 
     def to_json(self):
-    	return json.dumps({'id': self.id, 'name': self.name, 'avatarName': self.avatarName})
+    	return json.dumps({'uid': self.uid, 'name': self.name, 'avatarName': self.avatarName})
 
 
 @app.route('/')
@@ -35,23 +35,23 @@ def hello():
 @app.route('/users/list')
 def users_json():
 	users = User.query.all()
-	json_string = json.dumps([{'id': u.id, 'name': u.name, 'avatarName': u.avatarName} for u in users])
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, 'avatarName': u.avatarName} for u in users])
 	return json_string
 
 @app.route('/users/new', methods = ['POST'])
 def users_add():
 	obj = json.loads(request.data)
-	id = obj['id']
+	uid = obj['uid']
 	name = obj['name']
 	avatarName = obj['avatarName']
-	if id and name and avatarName:
-		if not User.query.get(long(id)):
-			newUser = User(long(id), name, avatarName)			
+	if uid and name and avatarName:
+		if not User.query.get(long(uid)):
+			newUser = User(long(uid), name, avatarName)			
 			db.session.add(newUser)
 			db.session.commit()
 			return newUser.to_json()
 		else:
-			print "user id [%d] already exists" % long(id)
+			print "user id [%d] already exists" % long(uid)
 			return json.dumps({'success': False})
 	else:
 		return json.dumps({'success': False})

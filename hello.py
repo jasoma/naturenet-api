@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from flask import request
+from flask import Response
 from flask import render_template
 from flask_bootstrap import Bootstrap
 
@@ -73,6 +74,17 @@ def users_json():
 	users = User.query.all()
 	json_string = json.dumps([{'uid': u.uid, 'name': u.name, 'avatarName': u.avatarName} for u in users])
 	return json_string
+
+@app.route('/users/list.txt')
+def users_list_nn():
+	users = User.query.all()
+	string = '\n'.join(["{user: id= %d, name= %s, avatarName= %s}" % (u.uid, u.name, u.avatarName) for u in users])
+	return Response(string, mimetype='text/plain')
+
+@app.route('/users/list')
+def users_list():
+	users = User.query.all()
+	return render_template('users.html', users=users)	
 
 @app.route('/users/new', methods = ['POST'])
 def users_add():

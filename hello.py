@@ -133,6 +133,20 @@ def notes_new():
 		print "user id [%d] already exists" % long(uid)
 		return json.dumps({'success': False})
 
+@app.route('/notes/<uid>/update', methods = ['POST'])
+def notes_update(uid):
+	# obj = json.loads(request.data)
+	# obj  = request.args
+	obj = request.form
+
+	note = Note.query.get(uid)
+	if note:		
+		db.session.query(Note).filter_by(uid=uid).update(obj)
+		db.session.commit()
+		return json.dumps({'success': True})
+	else:		
+		return json.dumps({'error': "%s is not a valid uid for this note" % uid})		
+
 @app.route('/notes/list')
 def notes_list():
 	notes = Note.query.all()

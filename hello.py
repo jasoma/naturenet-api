@@ -127,6 +127,13 @@ def users_add():
 	else:
 		return json.dumps({'success': False})
 
+@app.route('/activities/list.json')
+def activities_json():
+	activities = Activity.query.all()
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description} for u in activities])
+	return json_string
+
+
 @app.route('/landmarks/list.json')
 def landmarks_json():
 	landmarks = Landmark.query.all()

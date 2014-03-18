@@ -40,7 +40,9 @@ def users_json():
 
 @app.route('/users/new', methods = ['POST'])
 def users_add():
+	print "users_add"
 	obj = json.loads(request.data)
+	print obj
 	uid = obj['uid']
 	name = obj['name']
 	avatarName = obj['avatarName']

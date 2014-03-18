@@ -1,7 +1,10 @@
 import os
 from flask import Flask
 from flask import request
+from flask import render_template
+
 from flask.ext.sqlalchemy import SQLAlchemy
+
 import json
 import psycopg2
 
@@ -27,6 +30,22 @@ class User(db.Model):
     	return json.dumps({'uid': self.uid, 'name': self.name, 'avatarName': self.avatarName})
 
 
+class Landmark(db.Model):
+	uid = db.Column(db.Integer, primary_key=True)
+	name = db.Column(db.String(80), unique=False)
+	description = db.Column(db.Text, unique=False)
+	top = db.Column(db.Integer, unique=False)
+	bottom = db.Column(db.Integer, unique=False)
+	left = db.Column(db.Integer, unique=False)
+	right = db.Column(db.Integer, unique=False)
+
+	def __init__(self, uid):
+		self.uid = uid
+
+	def __repr__(self):
+		return '<Landmark %r>' % self.__dict__
+
+
 @app.route('/')
 def hello():
     return 'Hello World!'
@@ -40,9 +59,7 @@ def users_json():
 
 @app.route('/users/new', methods = ['POST'])
 def users_add():
-	print "users_add"
 	obj = json.loads(request.data)
-	print obj
 	uid = obj['uid']
 	name = obj['name']
 	avatarName = obj['avatarName']
@@ -58,6 +75,16 @@ def users_add():
 	else:
 		return json.dumps({'success': False})
 
+@app.route('/landmarks/list.json')
+def landmarks_json():
+	landmarks = Landmark.query.all()
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description } for u in landmarks])
+	return json_string
+
+@app.route('/landmarks/list')
+def landmarks():
+	landmarks = Landmark.query.all()	
+	return render_template('landmarks.html', landmarks=landmarks)
 
 if __name__ == '__main__':
     app.run(debug  = True)

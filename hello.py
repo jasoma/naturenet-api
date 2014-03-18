@@ -4,6 +4,7 @@ from flask import request
 from flask import render_template
 
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy import ForeignKey
 
 import json
 import psycopg2
@@ -46,6 +47,22 @@ class Landmark(db.Model):
 		return '<Landmark %r>' % self.__dict__
 
 
+class Note(db.Model):
+	uid = db.Column(db.BigInteger, primary_key=True)
+	name = db.Column(db.String(80), unique=False)
+	comment = db.Column(db.Text, unique=False)
+	user_uid = db.Column(db.BigInteger, ForeignKey('user.uid'))
+	landmark_uid = db.Column(db.Integer, ForeignKey('landmark.uid'))
+	longitude = db.Column(db.String(20), unique=False)
+	latitude = db.Column(db.String(20), unique=False)
+	categories = db.Column(db.String(80), unique=False)	
+
+	def __init__(self, uid):
+		self.uid = uid
+
+	def __repr__(self):
+		return '<Note %r>' % self.__dict__		
+
 @app.route('/')
 def hello():
     return 'Hello World!'
@@ -85,6 +102,36 @@ def landmarks_json():
 def landmarks():
 	landmarks = Landmark.query.all()	
 	return render_template('landmarks.html', landmarks=landmarks)
+
+@app.route('/notes/list.json')
+def notes_json():
+	notes = Note.query.all()
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "comment" : u.comment,
+		"longitude" : u.longitude, "latitude" : u.latitude, "categories" : u.categories, "user_uid" : u.user_uid, 
+		"landmark_uid" : u.landmark_uid
+		 } for u in notes])
+	return json_string
+
+@app.route('/notes/new', methods = ['POST'])
+def notes_new():
+	obj = json.loads(request.data)
+	uid = obj['uid']
+
+	if not Note.query.get(long(uid)):
+		newNote = Note(long(uid))		
+		newNote.name = obj['name']
+		newNote.comment = obj['comment']
+		newNote.longitude = obj['longitude']
+		newNote.latitude = obj['latitude']
+		newNote.categories = obj['categories']	
+		newNote.user_uid = obj['user_uid']
+		newNote.landmark_uid = obj['landmark_uid']
+		db.session.add(newNote)
+		db.session.commit()
+		return json.dumps({'success': True})
+	else:
+		print "user id [%d] already exists" % long(uid)
+		return json.dumps({'success': False})
 
 if __name__ == '__main__':
     app.run(debug  = True)

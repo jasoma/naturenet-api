@@ -1,0 +1,17 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}This is an example page{% endblock %}
+
+{% block navbar %}
+{% endblock %}
+
+{% block content %}
+{% for note in notes %}
+<div class="row">
+	<div class="col-xs-6">
+	<div class="thumbnail">
+    <img width="200" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
+	</div>
+</div>
+</div>
+{% endfor %}
+{% endblock %}

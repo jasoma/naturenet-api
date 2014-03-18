@@ -1,0 +1,24 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}NN - Users{% endblock %}
+
+{% block navbar %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+<h1>Users</h1>
+{% for user in users %}
+	<div class="row">
+		<div class="col-xs-1">    	
+    		<img height="50" src="/static/{{user.avatarName | lower}}.png">
+		</div>
+		<div class="col-xs-3">
+			<a href="/users/{{user.uid}}/view">{{user.name}}</a>
+		</div>
+	</div>
+{% endfor %}
+
+</div>
+
+{% endblock %}

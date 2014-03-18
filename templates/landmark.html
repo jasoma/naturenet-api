@@ -1,0 +1,31 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}NN - Users{% endblock %}
+
+{% block navbar %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+<div class="row">
+	<div class="col-xs-6">
+    <h2>{{landmark.name}}<h2>
+    <img height="100" src="/static/landmark_{{landmark.uid | lower}}.png">
+
+    <h2>Notes associated with this landmark</h2>
+    <div class="row">
+    {% for note in notes %}
+    	<div class="col-xs-4">           
+    	<a herf="#" class="thumbnail">
+			<img width="100" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
+		</a>
+		</div>
+	{% endfor %}
+	</div>
+
+	</div>
+</div>
+
+</div>
+
+{% endblock %}

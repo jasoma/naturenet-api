@@ -1,15 +1,26 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
-<html lang="en">
-<head>
-    <title>My Webpage</title>
-</head>
-<body>
-    <ol id="landmarks">
-    {% for landmark in landmarks %}
-        <li> {{landmark.name}}</li>
-        {{landmark.description}}
-    {% endfor %}
-    </ol>
+{% extends "bootstrap/base.html" %}
+{% block title %}NN - Users{% endblock %}
 
-</body>
-</html>
+{% block navbar %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+<h1>Landmarks</h1>
+{% for landmark in landmarks %}
+	<div class="row panel">
+		<div class="col-xs-4">    	
+			<a href="/landmarks/{{landmark.uid}}/view">{{landmark.name}}<br>
+    		<img height="100" src="/static/landmark_{{landmark.uid | lower}}.png">
+    	</a>
+		</div>
+		<div class="col-xs-8">
+			{{landmark.description | replace('\n','<p>') | safe}}
+		</div>
+	</div>
+{% endfor %}
+
+</div>
+
+{% endblock %}

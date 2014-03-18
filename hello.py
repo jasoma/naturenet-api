@@ -78,7 +78,7 @@ def users_add():
 @app.route('/landmarks/list.json')
 def landmarks_json():
 	landmarks = Landmark.query.all()
-	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description } for u in landmarks])
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description, "top" : u.top, "bottom" : u.bottom, "left" : u.left, "right" : u.right } for u in landmarks])
 	return json_string
 
 @app.route('/landmarks/list')

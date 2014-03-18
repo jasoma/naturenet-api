@@ -68,7 +68,7 @@ def hello():
     return 'Hello World!'
 
 
-@app.route('/users/list')
+@app.route('/users/list.json')
 def users_json():
 	users = User.query.all()
 	json_string = json.dumps([{'uid': u.uid, 'name': u.name, 'avatarName': u.avatarName} for u in users])

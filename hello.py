@@ -49,7 +49,6 @@ class Landmark(db.Model):
 
 class Note(db.Model):
 	uid = db.Column(db.BigInteger, primary_key=True)
-	name = db.Column(db.String(80), unique=False)
 	comment = db.Column(db.Text, unique=False)
 	user_uid = db.Column(db.BigInteger, ForeignKey('user.uid'))
 	landmark_uid = db.Column(db.Integer, ForeignKey('landmark.uid'))
@@ -106,7 +105,7 @@ def landmarks():
 @app.route('/notes/list.json')
 def notes_json():
 	notes = Note.query.all()
-	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "comment" : u.comment,
+	json_string = json.dumps([{'uid': u.uid, "comment" : u.comment,
 		"longitude" : u.longitude, "latitude" : u.latitude, "categories" : u.categories, "user_uid" : u.user_uid, 
 		"landmark_uid" : u.landmark_uid
 		 } for u in notes])
@@ -119,7 +118,6 @@ def notes_new():
 
 	if not Note.query.get(long(uid)):
 		newNote = Note(long(uid))		
-		newNote.name = obj['name']
 		newNote.comment = obj['comment']
 		newNote.longitude = obj['longitude']
 		newNote.latitude = obj['latitude']

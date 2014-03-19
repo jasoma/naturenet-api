@@ -102,7 +102,7 @@ class Activity(db.Model):
 		return '<Activity %r>' % self.__dict__		
 
 
-@app.route('/')
+#@app.route('/')
 def hello():
     return 'Hello World!'
 
@@ -233,6 +233,7 @@ def notes_view(uid):
 	note = Note.query.get(uid)
 	return render_template('note.html', note=note)
 
+@app.route('/')
 @app.route('/notes/list')
 def notes_list():
 	notes = Note.query.all()

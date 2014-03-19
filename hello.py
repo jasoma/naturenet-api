@@ -10,6 +10,16 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship, backref
 
+import cloudinary
+import cloudinary.api
+import cloudinary.uploader
+
+cloudinary.config(
+  cloud_name = 'university-of-colorado',  
+  api_key = '893246586645466',  
+  api_secret = '8Liy-YcDCvHZpokYZ8z3cUxCtyk'  
+)
+
 import json
 import psycopg2
 
@@ -72,6 +82,12 @@ class Note(db.Model):
 
 	def __repr__(self):
 		return '<Note %r>' % self.__dict__		
+
+	def img_thumbnail(self):
+		return cloudinary.CloudinaryImage("%s.jpg" % self.fileId).image(width = 200, height = 200, crop = 'fill')
+
+	def img_large(self):
+		return cloudinary.CloudinaryImage("%s.jpg" % self.fileId).image(width = 600, height = 600, crop = 'fit')
 
 
 class Activity(db.Model):

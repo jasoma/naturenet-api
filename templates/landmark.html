@@ -3,18 +3,19 @@
 
 {% block inner_content %}
 
-	<a href="/landmarks/list">Places</a> > {{landmark.name}}
-	
-    <h2>{{landmark.name}}<h2>
-    <img height="100" src="/static/landmark_{{landmark.uid | lower}}.png">
+<a href="/landmarks/list">Places</a> / {{landmark.name}}
 
-    <h3>Field notes associated with this place </h3>
-    {% for note in notes %}
-    	<div class="col-xs-3">           
-    	<a herf="#" class="thumbnail">
-			<img width="100" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
-		</a>
-		</div>
-	{% endfor %}
+<h2>{{landmark.name}}<h2>
+<img height="100" src="/static/landmark_{{landmark.uid | lower}}.png">
+
+<h3>Field notes associated with this place </h3>
+{% for note in notes %}
+	<div class="col-xs-2">           
+	<a href="/notes/{{note.uid}}/view" class="thumbnail">
+		{{note.img_thumbnail() | safe}}
+	</a>
+	</div>
+{% endfor %}
+
 
 {% endblock %}

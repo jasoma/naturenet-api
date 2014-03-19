@@ -3,19 +3,20 @@
 
 {% block inner_content %}
 
-	<a href="/activities/list">Activities</a> > {{activity.name}}
-	
-    <h2>{{activity.name}}</h2>    
+<a href="/activities/list">Activities</a> / {{activity.name}}
 
-    {{activity.description | replace('\n','<p>') | safe}}
+<h2>{{activity.name}}</h2>    
 
-    <h3>Field notes associated with this activity</h3>
-    {% for note in notes %}
-    	<div class="col-xs-3">           
-    	<a herf="#" class="thumbnail">
-			<img width="100" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
-		</a>
-		</div>
-	{% endfor %}
+{{activity.description | replace('\n','<p>') | safe}}
+
+<h3>Field notes associated with this activity</h3>
+{% for note in notes %}
+	<div class="col-xs-2">           
+	<a href="/notes/{{note.uid}}/view" class="thumbnail">
+		{{note.img_thumbnail() | safe}}
+	</a>
+	</div>
+{% endfor %}
+
 
 {% endblock %}

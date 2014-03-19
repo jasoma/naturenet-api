@@ -1,22 +1,20 @@
 {% extends "main.html" %}
 {% block title %}NN - Users{% endblock %}
 
-
 {% block inner_content %}
-<div class="row">
-	<div class="col-xs-6">
-	    <h2>{{user.name}}<h2>
-	    <img width=100 src="/static/{{user.avatarName | lower}}.png">
 
-	    <h3>Field notes contributed by this person </h3>
-    	{% for note in notes %}
-    	<div class="col-xs-3">           
-    	<a herf="#" class="thumbnail">
-			<img width="100" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"/>
-		</a>
-		</div>
-		{% endfor %}
+<a href="/users/list">People</a> / {{user.name}}
 
+<h2>{{user.name}}<h2>
+<img width=100 src="/static/{{user.avatarName | lower}}.png">
+
+<h3>Field notes contributed by this person </h3>
+{% for note in notes %}
+	<div class="col-xs-2">           
+	<a href="/notes/{{note.uid}}/view" class="thumbnail">
+		{{note.img_thumbnail() | safe}}
+	</a>
 	</div>
-</div>
+{% endfor %}
+
 {% endblock %}

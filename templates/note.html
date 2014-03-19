@@ -3,9 +3,9 @@
 
 {% block inner_content %}
 
-	<div class="col-xs-5 thumbnail">	
+	<div class="col-xs-7 thumbnail">	
 		<a href="/notes/{{note.uid}}/view">
-    		<img height="50px" src="http://drive.google.com/uc?export=view&id={{note.fileId}}">	
+    		{{ note.img_large() | safe }}
     	</a>
     </div>
     <div class="col-xs-5">

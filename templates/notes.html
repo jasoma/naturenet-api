@@ -11,11 +11,12 @@
  
 	<div class="col-xs-2 thumbnail">	
 		<a href="/notes/{{note.uid}}/view">
-    		<img height="50px" src="http://drive.google.com/uc?export=view&id={{note.fileId}}">	
+    		<!--img height="50px" src="http://drive.google.com/uc?export=view&id={{note.fileId}}"-->	
+    		{{note.img_thumbnail() | safe}}
     	</a>
 		<a href="/users/{{note.user.uid}}/view">{{note.user.name}}</a><br>
 		{{note.landmark.name}}<br>
-		{{note.activity.name}}
+		{{note.activity.name}}	
 	</div>
 
 {% endfor %}

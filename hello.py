@@ -52,8 +52,8 @@ class Landmark(db.Model):
 	uid = db.Column(db.Integer, primary_key=True)
 	name = db.Column(db.String(80), unique=False)
 	description = db.Column(db.Text, unique=False)
-	x = db.Column(db.Integer, unique=False)
-	y = db.Column(db.Integer, unique=False)
+	longitude = db.Column(db.Float, unique=False)
+	latitude = db.Column(db.Float, unique=False)
 
 	def __init__(self, uid):
 		self.uid = uid
@@ -168,7 +168,7 @@ def activity_view(uid):
 @app.route('/landmarks/list.json')
 def landmarks_json():
 	landmarks = Landmark.query.all()
-	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description, "x" : u.x, "y" : u.y} for u in landmarks])
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, "description" : u.description, "longitude" : u.longitude, "latitude" : u.latitude} for u in landmarks])
 	return json_string
 
 @app.route('/landmarks/list')
@@ -209,6 +209,8 @@ def notes_new():
 		newNote.fileId = obj['fileId']
 		db.session.add(newNote)
 		db.session.commit()
+		url = "http://drive.google.com/uc?export=view&id=" + note.fileId
+  		cloudinary.uploader.upload(url,public_id = note.fileId)
 		return json.dumps({'success': True})
 	else:
 		print "user id [%d] already exists" % long(uid)

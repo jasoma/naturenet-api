@@ -2,6 +2,7 @@ from db_def import db
 from db_def import Account
 from db_def import Note
 from db_def import Media
+from db_def import Context
 
 db.drop_all()
 db.create_all()
@@ -10,8 +11,14 @@ db.session.add(Account("tomyeh"))
 db.session.add(Account("abby"))
 db.session.commit()
 
+db.session.add(Context("Activity", "Ask","Find a naturalist and ask a question"))
+db.session.add(Context("Activity", "Find", "Take a picture of any insect you see today"))
+db.session.commit()
+
+c = Context.query.get(1)
+
 a = Account.query.filter_by(username="tomyeh").first()
-db.session.add(Note(a.id, "FieldNote", "a note given by tomyeh"))
+db.session.add(Note(a.id, c.id, "FieldNote", "a note given by tomyeh"))
 db.session.commit()
 
 n = a.notes[0]
@@ -22,7 +29,7 @@ db.session.commit()
 
 
 a = Account.query.filter_by(username="abby").first()
-db.session.add(Note(a.id, "FieldNote", "a note given by abby"))
+db.session.add(Note(a.id, c.id, "FieldNote", "a note given by abby"))
 db.session.commit()
 
 n = a.notes[0]

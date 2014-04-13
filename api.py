@@ -9,6 +9,7 @@ from db_def import db
 from db_def import app
 from db_def import Account
 from db_def import Note
+from db_def import Context
 
 
 import cloudinary
@@ -47,7 +48,8 @@ def api_account_get_notes(username):
 
 @app.route('/api/accounts')
 def api_accounts_list():
-	return json.dumps({"data":[{"id" : 10, "username" : "tomyeh"},{"id" : 10, "username" : "abby"}]})
+	accounts = Account.query.all()
+	return json.dumps({"data": [x.to_hash() for x in accounts]})
 
 @app.route('/api/note/<id>')
 def api_note_get(id):

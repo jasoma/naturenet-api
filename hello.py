@@ -109,7 +109,8 @@ def hello():
 
 @app.route('/users/<uid>/view')
 def user_view(uid):
-	user = User.query.get(uid)
+	user = query(User).selectfirst(users.c.name=='Mary')
+	 session.query(User).get_by(name='Mary')
 	notes = Note.query.filter_by(user_uid=uid).all();
 	return render_template('user.html', user=user, notes=notes)
 
@@ -118,6 +119,37 @@ def users_json():
 	users = User.query.all()
 	json_string = json.dumps([{'uid': u.uid, 'name': u.name, 'avatarName': u.avatarName} for u in users])
 	return json_string
+
+@app.route('/api')
+def api():
+	return "ok"
+
+
+@app.route('/api/account/<uid>')
+def api_account():
+	users = User.query.all()
+	json_string = json.dumps([{'uid': u.uid, 'name': u.name, 'avatarName': u.avatarName} for u in users])
+	return json_string
+
+@app.route('/api/account/new', methods = ['POST'])
+def api_account_new():
+	obj = json.loads(request.data)
+	uid = obj['uid']
+	username = obj['username']
+	name = obj['name']
+	avatarName = obj['avatarName']
+	if uid and name and avatarName:
+		if not User.query.get(long(uid)):
+			newUser = User(long(uid), name, avatarName)			
+			db.session.add(newUser)
+			db.session.commit()
+			return newUser.to_json()
+		else:
+			print "user id [%d] already exists" % long(uid)
+			return json.dumps({'success': False})
+	else:
+		return json.dumps({'success': False})	
+
 
 @app.route('/users/list.txt')
 def users_list_nn():

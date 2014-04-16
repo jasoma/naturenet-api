@@ -80,6 +80,7 @@ public class AccountTest {
 	@HttpTest( method = Method.GET, path = "/api/account/abby/notes" )
 	public void  get_notes_for_abby() {
 		String json = response.getBody();
+		JsonAssert.with(json).assertThat("$notes..content", hasSize(3));
 		JsonAssert.with(json).assertThat("$notes..content", hasItems("first note taken by abby"));
 		JsonAssert.with(json).assertThat("$notes..medias.title", hasItems("photo of a bird"));
 		JsonAssert.with(json).assertThat("$notes..medias.kind", hasItems("Photo"));

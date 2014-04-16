@@ -5,6 +5,7 @@ from db_def import Account
 from db_def import Note
 from db_def import Media
 from db_def import Context
+from db_def import Feedback
 
 db.drop_all()
 db.create_all()
@@ -14,6 +15,7 @@ wb = load_workbook(filename = r'data.xlsx')
 account_sheet = wb.get_sheet_by_name(name = 'Account')
 note_sheet = wb.get_sheet_by_name(name = 'Note')
 context_sheet = wb.get_sheet_by_name(name = 'Context')
+feedback_sheet = wb.get_sheet_by_name(name = 'Feedback')
 
 n = account_sheet.cell('A1').value
 for i in range(2,2+n):
@@ -63,6 +65,21 @@ for i in range(2,2+n):
 		print "create media: %s" % media
 		db.session.add(media)
 		db.session.commit()
+
+n = feedback_sheet.cell('A1').value
+for i in range(2,2+n):
+	table_name = feedback_sheet.cell('B' + str(i)).value	
+	row_id  = feedback_sheet.cell('C' + str(i)).value
+	kind     = feedback_sheet.cell('D' + str(i)).value
+	content  = feedback_sheet.cell('E' + str(i)).value	
+	username = feedback_sheet.cell('F' + str(i)).value		
+
+	if id:
+		a = Account.query.filter_by(username=username).first()
+		feedback = Feedback(a.id, kind, content, table_name, row_id)
+		db.session.add(feedback)
+		db.session.commit()		
+		print "create feedback: %s" % feedback		
 
 
 #print sheet_ranges.cell('B2').value # D18

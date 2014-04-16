@@ -107,3 +107,27 @@ class Media(db.Model):
     def to_json(self):
         return json.dumps(self.to_hash())
 
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, ForeignKey('account.id'))
+    kind = db.Column(db.String(40))
+    content = db.Column(db.Text())
+    table_name = db.Column(db.String(20))
+    row_id = db.Column(db.Integer)
+
+    account = relationship("Account", backref=backref('feedbacks', order_by=id))
+
+    def __init__(self, account_id, kind, content, table_name, row_id):
+        self.account_id = account_id
+        self.row_id = row_id
+        self.table_name = table_name
+        self.kind = kind
+        self.content = content
+
+    def __repr__(self):
+        return '<Feedback by %s: %s on %s: %s >' % (self.account, self.kind, self.table_name, self.content)
+
+    def to_hash(self):        
+        return {'kind' : self.kind, 'content': self.content,
+            'account': self.account.to_hash()}
+

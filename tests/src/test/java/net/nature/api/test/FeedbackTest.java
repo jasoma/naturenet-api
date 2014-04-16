@@ -45,11 +45,15 @@ public class FeedbackTest {
 		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(9));
 	}
 	
-	@HttpTest( method = Method.POST, path = "/api/note/1/feedback/new/comment" )
-	public void  create_feedback_comment_about_a_note() {
+	@HttpTest( method = Method.POST,
+			path = "/api/note/1/feedback/carol/new/comment",
+			content = "{ \"content\" : \"this is a new comment\"}")
+	public void  create_feedback_comment_about_a_note_by_carol() {
 		assertOk(response);
 		String json = response.getBody();
 		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
+		JsonAssert.with(json).assertThat("$feedback.content", equalTo("this is a new comment"));
+		JsonAssert.with(json).assertThat("$feedback.account.username", equalTo("carol"));
 	}
 	
 

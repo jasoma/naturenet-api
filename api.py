@@ -146,10 +146,23 @@ def api_feedback_get(id):
 	feedback = Feedback.query.get(id)
 	return json.dumps({'success': True, 'feedback' : feedback.to_hash()})	
 
+@app.route('/api/note/<id>/feedback/<username>/new/comment',
+	methods = ['POST'])
+def api_feedback_add_to_note(id,username):
+	obj = json.loads(request.data)
+	note = Note.query.get(id)
+	account = Account.query.filter_by(username=username).first()
+	if note and account and 'content' in obj:
+		kind = "Comment"
+		content = obj['content']
+		table_name = "note"
+		row_id = id
+		feedback = Feedback(account.id, kind, content, table_name, row_id)
+		db.session.add(feedback)
+		db.session.commit()	
+		return json.dumps({'success': True, 'feedback' : feedback.to_hash()})	
 
-
-
-
+	return json.dumps({'success': False})
 
 if __name__ == '__main__':
     app.run(debug  = True)

@@ -10,6 +10,7 @@ from db_def import app
 from db_def import Account
 from db_def import Note
 from db_def import Context
+from db_def import Media
 
 
 import cloudinary
@@ -36,25 +37,72 @@ def api_accounts_count():
 	n = Account.query.count()
 	return json.dumps({'success' : True, 'data' : n})
 
+@app.route('/api/account/new', methods = ['POST'])
+def api_account_new():
+	obj = json.loads(request.data)
+	username = obj['username']
+	if username:
+		account = Account.query.filter_by(username=username).first()
+		if not account:
+			newAccount = Account(username)			
+			db.session.add(newAccount)
+			db.session.commit()
+			return json.dumps({'success': True, 'account' : newAccount.to_hash()})	
+	
+	return json.dumps({'success': False})	
+
 @app.route('/api/account/<username>')
 def api_account_get(username):
 	account = Account.query.filter_by(username=username).first()
-	return account.to_json()
+	return json.dumps({'success': True, 'account' : account.to_hash()})	
 
 @app.route('/api/account/<username>/notes')
 def api_account_get_notes(username):
 	account = Account.query.filter_by(username=username).first()	
-	return json.dumps({"data": [x.to_hash() for x in account.notes]})
+	return json.dumps({'success': True, 'notes': [x.to_hash() for x in account.notes]})
 
 @app.route('/api/accounts')
 def api_accounts_list():
 	accounts = Account.query.all()
-	return json.dumps({"data": [x.to_hash() for x in accounts]})
+	return json.dumps({'success': True, "accounts": [x.to_hash() for x in accounts]})
 
 @app.route('/api/note/<id>')
 def api_note_get(id):
 	note = Note.query.filter_by(id=id).first()
-	return note.to_json()
+	return json.dumps({'success': True, "note" : note.to_hash()})
+
+@app.route('/api/note/new', methods = ['POST'])
+def api_note_create():
+	obj = json.loads(request.data)
+	if obj and 'content' in obj and 'context' in obj and 'username' in obj and 'kind' in obj:
+		content = obj['content']
+		context = obj['context']
+		username = obj['username']
+		kind = obj['kind']
+		a = Account.query.filter_by(username=username).first()
+		c = Context.query.filter_by(name=context).first()
+		if a and c:
+			note = Note(a.id, c.id, kind, content)
+			db.session.add(note)
+			db.session.commit()
+			return json.dumps({'success' : True, 'note' : note.to_hash()})
+	return json.dumps({'success': False})	
+
+@app.route('/api/media/new', methods = ['POST'])
+def api_media_create():
+	obj = json.loads(request.data)
+	if obj and 'kind' in obj and 'title' in obj and 'note_id' in obj:
+		link = "unknown"
+		title = obj['title']
+		note_id = obj['note_id']
+		kind = obj['kind']
+		note = Note.query.get(int(note_id))
+		if note:
+			media = Media(note.id, kind, title, link) 
+			db.session.add(media)
+			db.session.commit()
+			return json.dumps({'success' : True, 'media' : media.to_hash()})
+	return json.dumps({'success': False})
 
 
 if __name__ == '__main__':

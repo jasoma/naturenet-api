@@ -24,11 +24,45 @@ public class NoteTest {
 	private Response response; // will be injected after every request
 
 	@HttpTest( method = Method.GET, path = "/api/note/1" )
-	public void  noteGet() {
+	public void  get() {
 		assertOk(response);
 		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$.kind", equalTo("FieldNote"));
-		JsonAssert.with(json).assertThat("$.context.name", equalTo("ask"));
+		JsonAssert.with(json).assertThat("$note.kind", equalTo("FieldNote"));
+		JsonAssert.with(json).assertThat("$note.context.name", equalTo("ask"));
 	}  
 	
+	@HttpTest(method = Method.POST, 
+			path = "/api/note/new",
+			content = "{ \"username\" : \"tomyeh\"" +
+					", \"content\" : \"new note\"" +
+					", \"context\" : \"ask\"  " +
+					", \"kind\" : \"FieldNote\"}  ")
+	public void  create_succeed() {
+		assertOk(response);
+		String json = response.getBody();		
+		System.out.println(json);
+		JsonAssert.with(json).assertThat("$note.kind", equalTo("FieldNote"));
+		JsonAssert.with(json).assertThat("$note.content", equalTo("new note"));
+		JsonAssert.with(json).assertThat("$note.context.name", equalTo("ask"));
+		JsonAssert.with(json).assertThat("$note.account.username", equalTo("tomyeh"));
+	}
+	
+	
+	@HttpTest( method = Method.POST, 
+			path = "/api/note/new",
+			content = "{}")
+	public void  create_fails_without_data() {
+		assertOk(response);
+		String json = response.getBody();		
+		JsonAssert.with(json).assertThat("$success", equalTo(false));
+	}  
+	
+	@HttpTest( method = Method.POST, 
+			path = "/api/note/new",
+			content = "{ \"username\" : \"nobody\"} ")
+	public void  create_fails_username_does_not_exist() {
+		assertOk(response);
+		String json = response.getBody();		
+		JsonAssert.with(json).assertThat("$success", equalTo(false));
+	}  	
 }

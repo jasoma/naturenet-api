@@ -7,13 +7,13 @@ from flask.ext.sqlalchemy import SQLAlchemy
 import json
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
 
 class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=False)   
+    username = db.Column(db.String(80), unique=False)
 
     #notes = relationship("Note", order_by="Note.id", backref="account")
 
@@ -71,7 +71,8 @@ class Note(db.Model):
     def to_hash(self):
         return {'id': self.id, 'kind': self.kind, 'content' : self.content, 
             'medias' : [ x.to_hash() for x in self.medias],
-            'context' : self.context.to_hash()}
+            'context' : self.context.to_hash(),
+            'account' : self.account.to_hash()}
     
     def to_json(self):
         return json.dumps(self.to_hash())
@@ -102,4 +103,7 @@ class Media(db.Model):
 
     def to_hash(self):        
         return {'id' : self.id, 'kind': self.kind, 'title' : self.title, 'link' : self.get_url()}
+
+    def to_json(self):
+        return json.dumps(self.to_hash())
 

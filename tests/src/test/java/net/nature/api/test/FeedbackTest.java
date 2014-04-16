@@ -44,6 +44,14 @@ public class FeedbackTest {
 		String json = response.getBody();
 		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(9));
 	}
+	
+	@HttpTest( method = Method.POST, path = "/api/note/1/feedback/new/comment" )
+	public void  create_feedback_comment_about_a_note() {
+		assertOk(response);
+		String json = response.getBody();
+		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
+	}
+	
 
 	@HttpTest( method = Method.GET, path = "/api/media/1/feedbacks" )
 	public void  get_feedbacks_about_a_media() {

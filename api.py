@@ -140,6 +140,19 @@ def api_media_get_feedbacks(id):
 #
 # Context
 #
+@app.route('/api/context/<id>')
+def api_context_get(id):
+	context = Context.query.get(id)
+	return json.dumps({'success': True, 'context' : context.to_hash()})	
+
+@app.route('/api/context/<id>/notes')
+def api_context_get_all_notes(id):
+	context = Context.query.get(id)
+	if context:
+		items = context.notes
+		return json.dumps({'success': True, 
+			"notes" : [x.to_hash() for x in items]})
+
 
 @app.route('/api/context/activities')
 def api_context_get_all_activities():
@@ -147,12 +160,13 @@ def api_context_get_all_activities():
 	return json.dumps({'success': True, 
 		"contexts" : [x.to_hash() for x in items]})
 
-
 @app.route('/api/context/landmarks')
 def api_context_get_all_landmarks():
 	items = Context.query.filter_by(kind='Landmark').all()
 	return json.dumps({'success': True, 
 		"contexts" : [x.to_hash() for x in items]})
+
+
 
 #
 # Feedback

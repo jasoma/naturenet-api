@@ -1,60 +1,43 @@
 package net.nature.api.test;
 
-import static com.eclipsesource.restfuse.Assert.assertOk;
-import static org.hamcrest.Matchers.*;
+import static com.jayway.restassured.RestAssured.get;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.everyItem;
 
-import org.junit.Rule;
-import org.junit.runner.RunWith;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.eclipsesource.restfuse.Destination;
-import com.eclipsesource.restfuse.HttpJUnitRunner;
-import com.eclipsesource.restfuse.Method;
-import com.eclipsesource.restfuse.Response;
-import com.eclipsesource.restfuse.annotation.Context;
-import com.eclipsesource.restfuse.annotation.HttpTest;
-import com.jayway.jsonassert.JsonAssert;
+import com.jayway.restassured.RestAssured;
 
-@RunWith( HttpJUnitRunner.class )
 public class ContextTest {
 
-	@Rule
-	public Destination destination = new Destination(this, "http://localhost:5000");
-
-	@Context
-	private Response response; // will be injected after every request
-
-	@HttpTest(method = Method.GET, 
-			path = "/api/context/1")
-	public void  get() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$context.kind", equalTo("Activity"));
-		JsonAssert.with(json).assertThat("$context.name", equalTo("ask"));
+	@Before
+	public void setUp(){
+		RestAssured.baseURI = "http://localhost";
+		RestAssured.port = 5000;
+		RestAssured.basePath = "/api";
 	}
 	
-	@HttpTest(method = Method.GET, 
-			path = "/api/context/1/notes")
+	@Test
+	public void  get_single_note() {
+		get("/context/1").then().body("context.kind", equalTo("Activity"))
+			.and().body("context.name", equalTo("ask"));
+	}
+	
+	@Test
 	public void  get_notes() {
-		assertOk(response);		
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$notes..context.id", everyItem(equalTo(1)));
+		get("/context/1/notes").then().body("notes.context.id", everyItem(equalTo(1)));
 	}
-	
-	@HttpTest(method = Method.GET, 
-			path = "/api/context/activities")
+
+	@Test
 	public void  get_all_activities() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$..kind", everyItem(equalTo("Activity")));
+		get("/context/activities").then().body("contexts.kind", everyItem(equalTo("Activity")));
 	}
-	
-	@HttpTest(method = Method.GET, 
-			path = "/api/context/landmarks")
+
+
+	@Test
 	public void  get_all_landmarks() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$..kind", everyItem(equalTo("Landmark")));
+		get("/context/landmarks").then().body("contexts.kind", everyItem(equalTo("Landmark")));
 	}
-	
-	
+
 }

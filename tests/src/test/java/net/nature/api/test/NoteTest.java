@@ -1,68 +1,62 @@
 package net.nature.api.test;
 
-import static com.eclipsesource.restfuse.Assert.assertOk;
-import static org.hamcrest.Matchers.*;
+import static com.jayway.restassured.RestAssured.get;
+import static com.jayway.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
-import org.junit.Rule;
-import org.junit.runner.RunWith;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.eclipsesource.restfuse.Destination;
-import com.eclipsesource.restfuse.HttpJUnitRunner;
-import com.eclipsesource.restfuse.Method;
-import com.eclipsesource.restfuse.Response;
-import com.eclipsesource.restfuse.annotation.Context;
-import com.eclipsesource.restfuse.annotation.HttpTest;
-import com.jayway.jsonassert.JsonAssert;
+import com.jayway.restassured.RestAssured;
 
-@RunWith( HttpJUnitRunner.class )
 public class NoteTest {
-
-	@Rule
-	public Destination destination = new Destination(this, "http://localhost:5000");
-
-	@Context
-	private Response response; // will be injected after every request
-
-	@HttpTest( method = Method.GET, path = "/api/note/1" )
-	public void  get() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$note.kind", equalTo("FieldNote"));
-		JsonAssert.with(json).assertThat("$note.context.name", equalTo("ask"));
-	}  
 	
-	@HttpTest(method = Method.POST, 
-			path = "/api/note/new",
-			content = "{ \"username\" : \"tomyeh\"" +
-					", \"content\" : \"new note\"" +
-					", \"context\" : \"ask\"  " +
-					", \"kind\" : \"FieldNote\"}  ")
-	public void  create_succeed() {
-		assertOk(response);
-		String json = response.getBody();		
-		System.out.println(json);
-		JsonAssert.with(json).assertThat("$note.kind", equalTo("FieldNote"));
-		JsonAssert.with(json).assertThat("$note.content", equalTo("new note"));
-		JsonAssert.with(json).assertThat("$note.context.name", equalTo("ask"));
-		JsonAssert.with(json).assertThat("$note.account.username", equalTo("tomyeh"));
+	@Before
+	public void setUp(){
+		RestAssured.baseURI = "http://localhost";
+		RestAssured.port = 5000;
+		RestAssured.basePath = "/api";
 	}
-	
-	
-	@HttpTest( method = Method.POST, 
-			path = "/api/note/new",
-			content = "{}")
-	public void  create_fails_without_data() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$success", equalTo(false));
+
+	@Test
+	public void  get_single_note() {
+		get("/note/1")
+		.then()
+			.body("data.kind", equalTo("FieldNote"))
+			.body("data.context.name", equalTo("ask"));
+
+	}
+
+	@Test
+	public void  create_succeed() {
+		given().
+	 		param("content", "new note").
+	 		param("context", "ask").
+	 		param("kind", "FieldNote").
+	 	when().
+	 		post("/note/new/tomyeh").
+	 	then().
+	 		body("data.kind", equalTo("FieldNote")).
+	 		body("data.content", equalTo("new note")).
+	 		body("data.context.name", equalTo("ask")).
+	 		body("data.account.username", equalTo("tomyeh"));
+	}
+
+	@Test
+	public void  error_create_without_enough_parameters(){
+		given(). 		
+		when().
+ 			post("/note/new/tomyeh").
+ 		then().
+	 		statusCode(400);
 	}  
 	
-	@HttpTest( method = Method.POST, 
-			path = "/api/note/new",
-			content = "{ \"username\" : \"nobody\"} ")
-	public void  create_fails_username_does_not_exist() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$success", equalTo(false));
-	}  	
+	@Test
+	public void  error_create_username_does_not_exist(){
+		given(). 		
+		when().
+ 			post("/note/new/blahblahxxxxx123").
+ 		then().
+	 		statusCode(400);
+	}  
 }

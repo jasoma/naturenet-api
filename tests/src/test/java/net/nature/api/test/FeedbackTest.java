@@ -1,99 +1,77 @@
 package net.nature.api.test;
 
-import static com.eclipsesource.restfuse.Assert.assertOk;
+import static com.jayway.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
-import org.junit.Rule;
-import org.junit.runner.RunWith;
+import org.junit.Before;
+import org.junit.Test;
 
-import com.eclipsesource.restfuse.Destination;
-import com.eclipsesource.restfuse.HttpJUnitRunner;
-import com.eclipsesource.restfuse.Method;
-import com.eclipsesource.restfuse.Response;
-import com.eclipsesource.restfuse.annotation.Context;
-import com.eclipsesource.restfuse.annotation.HttpTest;
-import com.jayway.jsonassert.JsonAssert;
+import com.jayway.restassured.RestAssured;
 
-@RunWith( HttpJUnitRunner.class )
 public class FeedbackTest {
-
-	@Rule
-	public Destination destination = new Destination(this, "http://localhost:5000");
-
-	@Context
-	private Response response; // will be injected after every request
-
-	@HttpTest( method = Method.GET, path = "/api/feedback/1" )
-	public void  get() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
-		JsonAssert.with(json).assertThat("$feedback.account.username", equalTo("tomyeh"));
-	}  
 	
-	@HttpTest( method = Method.GET, path = "/api/account/tomyeh/feedbacks" )
+	@Before
+	public void setUp(){
+		RestAssured.baseURI = "http://localhost";
+		RestAssured.port = 5000;
+		RestAssured.basePath = "/api";
+	}
+	
+	@Test
+	public void  get_single_feedback() {
+		get("/feedback/1")
+		.then()
+			.body("data.kind", equalTo("Comment"))
+		.and()
+			.body("data.account.username", equalTo("tomyeh"));
+	}
+
+	@Test
 	public void  get_feedbacks_by_tomyeh() {
-		assertOk(response);
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(5));
+		get("/account/tomyeh/feedbacks")
+			.then()
+			.body("data.kind", hasSize(5))			
+			.body("data.account.username", everyItem(equalTo("tomyeh")));
 	}
-	
-	@HttpTest( method = Method.GET, path = "/api/note/20/feedbacks" )
+
+	@Test
 	public void  get_feedbacks_about_a_note() {
-		assertOk(response);
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(2));
+		get("/note/20/feedbacks")
+			.then()
+			.body("data.kind", hasSize(2));
 	}
-	
-	@HttpTest( method = Method.POST,
-			path = "/api/note/3/feedback/carol/new/comment",
-			content = "{ \"content\" : \"this is a new comment\"}")
+
+	@Test
 	public void  create_feedback_comment_about_a_note_by_carol() {
-		assertOk(response);
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
-		JsonAssert.with(json).assertThat("$feedback.content", equalTo("this is a new comment"));
-		JsonAssert.with(json).assertThat("$feedback.model", equalTo("Note"));
-		JsonAssert.with(json).assertThat("$feedback.account.username", equalTo("carol"));
+		given().
+		 	param("content", "this is a new comment").
+		when().
+			post("/note/3/feedback/carol/new/comment")
+		.then()
+			.body("data.kind", equalTo("Comment"))
+			.body("data.account.username", equalTo("carol"))
+			.body("data.model", equalTo("Note"))
+			.body("data.content", equalTo("this is a new comment"));
 	}
 	
-	@HttpTest( method = Method.POST,
-			path = "/api/media/3/feedback/carol/new/comment",
-			content = "{ \"content\" : \"this is a new comment\"}")
+	@Test
 	public void  create_feedback_comment_about_a_media_by_carol() {
-		assertOk(response);
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
-		JsonAssert.with(json).assertThat("$feedback.model", equalTo("Media"));
-		JsonAssert.with(json).assertThat("$feedback.content", equalTo("this is a new comment"));
-		JsonAssert.with(json).assertThat("$feedback.account.username", equalTo("carol"));
+		given().
+		 	param("content", "this is a new comment").
+		when().
+			post("/media/3/feedback/carol/new/comment")
+		.then()
+			.body("data.kind", equalTo("Comment"))
+			.body("data.account.username", equalTo("carol"))
+			.body("data.model", equalTo("Media"))
+			.body("data.content", equalTo("this is a new comment"));
 	}
-	
 
-	@HttpTest( method = Method.GET, path = "/api/media/1/feedbacks" )
+	@Test
 	public void  get_feedbacks_about_a_media() {
-		assertOk(response);
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(3));
-		JsonAssert.with(json).assertThat("$feedbacks..kind", hasItems("Comment"));
+		get("/media/1/feedbacks")
+		.then()
+		.body("data.kind", hasSize(3))
+		.body("data.kind", hasItems("Comment"));
 	}
-
-	
-	@HttpTest( method = Method.POST, 
-			path = "/api/note/new",
-			content = "{}")
-	public void  create_fails_without_data() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$success", equalTo(false));
-	}  
-	
-	@HttpTest( method = Method.POST, 
-			path = "/api/note/new",
-			content = "{ \"username\" : \"nobody\"} ")
-	public void  create_fails_username_does_not_exist() {
-		assertOk(response);
-		String json = response.getBody();		
-		JsonAssert.with(json).assertThat("$success", equalTo(false));
-	}  	
 }

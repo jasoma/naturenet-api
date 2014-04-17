@@ -1,90 +1,96 @@
 package net.nature.api.test;
 
-import static com.eclipsesource.restfuse.Assert.assertOk;
+import static com.jayway.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
-import org.junit.Rule;
-import org.junit.runner.RunWith;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.eclipsesource.restfuse.Destination;
-import com.eclipsesource.restfuse.HttpJUnitRunner;
-import com.eclipsesource.restfuse.Method;
-import com.eclipsesource.restfuse.Response;
-import com.eclipsesource.restfuse.annotation.Context;
-import com.eclipsesource.restfuse.annotation.HttpTest;
-import com.jayway.jsonassert.JsonAssert;
+import org.junit.Before;
+import org.junit.Test;
 
-@RunWith( HttpJUnitRunner.class )
+import com.jayway.restassured.RestAssured;
+
 public class AccountTest {
+	
+	// class variable
+	final String lexicon = "ABCDEFGHIJKLMNOPQRSTUVWXYZ12345674890";
 
-	@Rule
-	public Destination destination = new Destination(this, "http://localhost:5000");
+	final java.util.Random rand = new java.util.Random();
 
-	@Context
-	private Response response; // will be injected after every request
+	// consider using a Map<String,Boolean> to say whether the identifier is being used or not 
+	final Set<String> identifiers = new HashSet<String>();
 
-	@HttpTest( method = Method.GET, path = "/api" )
-	public void checkAPIOnlineStatus() {
-		assertOk( response );
-	}  
-
-	@HttpTest( method = Method.GET, path = "/api/accounts/count" )
+	public String randomIdentifier() {
+	    StringBuilder builder = new StringBuilder();
+	    while(builder.toString().length() == 0) {
+	        int length = rand.nextInt(5)+5;
+	        for(int i = 0; i < length; i++)
+	            builder.append(lexicon.charAt(rand.nextInt(lexicon.length())));
+	        if(identifiers.contains(builder.toString())) 
+	            builder = new StringBuilder();
+	    }
+	    return builder.toString();
+	}
+	
+	
+	@Before
+	public void setUp(){
+		RestAssured.baseURI = "http://localhost";
+		RestAssured.port = 5000;
+		RestAssured.basePath = "/api";
+	}
+	
+	@Test
 	public void  count() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$data", greaterThan(1));
+		get("/accounts/count")
+		.then()
+			.body("data", greaterThan(5));
 	}  
 
-	@HttpTest( method = Method.GET, path = "/api/account/tomyeh" )
+	@Test
 	public void  get_tomyeh() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$account.username", equalTo("tomyeh"));
+		get("/account/tomyeh")
+		.then()
+		.body("data.username", equalTo("tomyeh"));
 	}
 	
-	@HttpTest( method = Method.POST, 
-			path = "/api/account/new", 
-			content = "{ \"username\" : \"newbie\"} ")
+	@Test
 	public void  create_new() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$account.username", equalTo("newbie"));
+		String newname = randomIdentifier();
+		post("/account/new/" + newname).
+			then().
+			body("data.username", equalTo(newname));
 	}
-	
-	@HttpTest( method = Method.POST, 
-			path = "/api/account/new", 
-			content = "{ \"username\" : \"tomyeh\"} ")
-	public void  create_new_but_username_already_exists() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$success", equalTo(false));
+
+	@Test
+	public void  error_create_new_username_already_taken() {
+		post("/account/new/tomyeh").
+			then().
+			statusCode(400);
 	}	
+
 	
-	
-	@HttpTest( method = Method.GET, path = "/api/account/abby" )
+	@Test
 	public void  get_abby() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$account.username", equalTo("abby"));
+		get("/account/abby")
+		.then()
+		.body("data.username", equalTo("abby"));
 	}  
 
-	@HttpTest( method = Method.GET, path = "/api/accounts" )
+	@Test
 	public void  get_all_accounts() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$accounts..username", hasItems("tomyeh","abby"));
+		get("/accounts")
+		.then()
+		.body("data.username", hasItems("tomyeh","abby"));		
 	}  
-	
-	@HttpTest( method = Method.GET, path = "/api/account/tomyeh/notes" )
+
+	@Test
 	public void  get_notes_for_tomyeh() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$notes..content", hasItems("first note taken by tomyeh"));
-		JsonAssert.with(json).assertThat("$notes..medias.title", hasItems("photo of a bird", "video of a bird"));
-		JsonAssert.with(json).assertThat("$notes..medias.kind", hasItems("Photo","Video"));
+		get("/account/tomyeh/notes").
+			then().
+			body("data.content", hasItems("first note taken by tomyeh")).
+			body("data.account.username", everyItem(equalTo("tomyeh")));
 	}  
-	
-	@HttpTest( method = Method.GET, path = "/api/account/abby/notes" )
-	public void  get_notes_for_abby() {
-		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$notes..content", hasSize(3));
-		JsonAssert.with(json).assertThat("$notes..content", hasItems("first note taken by abby"));
-		JsonAssert.with(json).assertThat("$notes..medias.title", hasItems("photo of a bird"));
-		JsonAssert.with(json).assertThat("$notes..medias.kind", hasItems("Photo"));
-	}  
-	
 	
 }

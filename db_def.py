@@ -129,5 +129,6 @@ class Feedback(db.Model):
 
     def to_hash(self):        
         return {'kind' : self.kind, 'content': self.content,
-            'account': self.account.to_hash()}
+            'account': self.account.to_hash(),
+            'model': self.table_name}
 

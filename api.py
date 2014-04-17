@@ -138,6 +138,23 @@ def api_media_get_feedbacks(id):
 
 
 #
+# Context
+#
+
+@app.route('/api/context/activities')
+def api_context_get_all_activities():
+	items = Context.query.filter_by(kind='Activity').all()
+	return json.dumps({'success': True, 
+		"contexts" : [x.to_hash() for x in items]})
+
+
+@app.route('/api/context/landmarks')
+def api_context_get_all_landmarks():
+	items = Context.query.filter_by(kind='Landmark').all()
+	return json.dumps({'success': True, 
+		"contexts" : [x.to_hash() for x in items]})
+
+#
 # Feedback
 #
 
@@ -155,7 +172,7 @@ def api_feedback_add_to_note(id,username):
 	if note and account and 'content' in obj:
 		kind = "Comment"
 		content = obj['content']
-		table_name = "note"
+		table_name = "Note"
 		row_id = id
 		feedback = Feedback(account.id, kind, content, table_name, row_id)
 		db.session.add(feedback)
@@ -163,6 +180,24 @@ def api_feedback_add_to_note(id,username):
 		return json.dumps({'success': True, 'feedback' : feedback.to_hash()})	
 
 	return json.dumps({'success': False})
+
+@app.route('/api/media/<id>/feedback/<username>/new/comment',
+	methods = ['POST'])
+def api_feedback_add_to_media(id,username):
+	obj = json.loads(request.data)
+	media = Media.query.get(id)
+	account = Account.query.filter_by(username=username).first()
+	if media and account and 'content' in obj:
+		kind = "Comment"
+		content = obj['content']
+		table_name = "Media"
+		row_id = id
+		feedback = Feedback(account.id, kind, content, table_name, row_id)
+		db.session.add(feedback)
+		db.session.commit()	
+		return json.dumps({'success': True, 'feedback' : feedback.to_hash()})	
+
+	return json.dumps({'success': False})	
 
 if __name__ == '__main__':
     app.run(debug  = True)

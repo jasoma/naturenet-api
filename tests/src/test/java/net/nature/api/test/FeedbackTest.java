@@ -38,20 +38,33 @@ public class FeedbackTest {
 		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(5));
 	}
 	
-	@HttpTest( method = Method.GET, path = "/api/note/3/feedbacks" )
+	@HttpTest( method = Method.GET, path = "/api/note/20/feedbacks" )
 	public void  get_feedbacks_about_a_note() {
 		assertOk(response);
 		String json = response.getBody();
-		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(9));
+		JsonAssert.with(json).assertThat("$feedbacks..kind", hasSize(2));
 	}
 	
 	@HttpTest( method = Method.POST,
-			path = "/api/note/1/feedback/carol/new/comment",
+			path = "/api/note/3/feedback/carol/new/comment",
 			content = "{ \"content\" : \"this is a new comment\"}")
 	public void  create_feedback_comment_about_a_note_by_carol() {
 		assertOk(response);
 		String json = response.getBody();
 		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
+		JsonAssert.with(json).assertThat("$feedback.content", equalTo("this is a new comment"));
+		JsonAssert.with(json).assertThat("$feedback.model", equalTo("Note"));
+		JsonAssert.with(json).assertThat("$feedback.account.username", equalTo("carol"));
+	}
+	
+	@HttpTest( method = Method.POST,
+			path = "/api/media/3/feedback/carol/new/comment",
+			content = "{ \"content\" : \"this is a new comment\"}")
+	public void  create_feedback_comment_about_a_media_by_carol() {
+		assertOk(response);
+		String json = response.getBody();
+		JsonAssert.with(json).assertThat("$feedback.kind", equalTo("Comment"));
+		JsonAssert.with(json).assertThat("$feedback.model", equalTo("Media"));
 		JsonAssert.with(json).assertThat("$feedback.content", equalTo("this is a new comment"));
 		JsonAssert.with(json).assertThat("$feedback.account.username", equalTo("carol"));
 	}

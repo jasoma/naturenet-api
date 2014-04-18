@@ -18,6 +18,7 @@ from db_def import Feedback
 import cloudinary
 import cloudinary.api
 import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
 
 cloudinary.config(
   cloud_name = 'university-of-colorado',  
@@ -52,10 +53,15 @@ def api_accounts_count():
 
 @app.route('/api/account/new/<username>', methods = ['POST'])
 def api_account_new(username):
-	if username:
+	f = request.form
+	if username and 'email' in f and 'name' in f and 'consent' in f and 'password' in f:
 		account = Account.query.filter_by(username=username).first()
 		if not account:
-			newAccount = Account(username)			
+			newAccount = Account(username)		
+			newAccount.name = f['name']
+			newAccount.email = f['email']
+			newAccount.consent = f['consent']
+			newAccount.password = f['password']
 			db.session.add(newAccount)
 			db.session.commit()
 			return success(newAccount.to_hash())		
@@ -65,7 +71,10 @@ def api_account_new(username):
 @app.route('/api/account/<username>')
 def api_account_get(username):
 	account = Account.query.filter_by(username=username).first()
-	return success(account.to_hash())	
+	if account:
+		return success(account.to_hash())
+	else:
+		return error("user does not exist")
 
 @app.route('/api/account/<username>/notes')
 def api_account_get_notes(username):
@@ -87,7 +96,7 @@ def api_accounts_list():
 #
 @app.route('/api/note/<id>')
 def api_note_get(id):
-	note = Note.query.filter_by(id=id).first()
+	note = Note.query.get(id)
 	return success(note.to_hash())
 
 @app.route('/api/note/<id>/feedbacks')
@@ -117,22 +126,13 @@ def api_note_create(username):
 # Media
 #
 
-@app.route('/api/media/new', methods = ['POST'])
-def api_media_create():
-	obj = json.loads(request.data)
-	if obj and 'kind' in obj and 'title' in obj and 'note_id' in obj:
-		link = "unknown"
-		title = obj['title']
-		note_id = obj['note_id']
-		kind = obj['kind']
-		note = Note.query.get(int(note_id))
-		if note:
-			media = Media(note.id, kind, title, link) 
-			db.session.add(media)
-			db.session.commit()
-			return json.dumps({'success' : True, 'media' : media.to_hash()})
-	return json.dumps({'success': False})
-
+@app.route('/api/media/<id>')
+def api_media_get(id):
+	media = Media.query.get(id)
+	if media:
+		return success(media.to_hash())
+	else:
+		return error("media object does not exist")
 
 @app.route('/api/media/<id>/feedbacks')
 def api_media_get_feedbacks(id):
@@ -149,20 +149,39 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-	print request
+@app.route('/api/note/<id>/new/photo', methods = ['POST'])
+def api_media_create(id):
 	print request.files
-	if request.method == 'POST':
-		file = request.files['photo']
+	print request.form
+	#if "title" in 
+	# # obj = json.loads(request.data)
+	# if obj and 'kind' in obj and 'title' in obj and 'note_id' in obj:
+	
+		# link = "unknown"
+	link = ""
+	title = request.form["title"] or ""
+	# 	note_id = obj['note_id']
+	kind = "Photo"
+	note = Note.query.get(int(id))
+	if note:
+		media = Media(note.id, kind, title, link) 
+		db.session.add(media)
+		db.session.commit()
+		file = request.files['file']
 		if file and allowed_file(file.filename):
 			filename = secure_filename(file.filename)
 			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-			print filename
-	# 		return redirect(url_for('uploaded_file',
- #                        filename=filename))
-	return json.dumps({"success" : True})
-
+			print "saving locally to " + filename
+			response = cloudinary.uploader.upload(file, public_id = media.id)
+			print "uploading to cloudinary .."
+			if response:
+				# r = json.loads(ret)
+				print response['url']
+				media.link = response['url']
+				db.session.add(media)
+				db.session.commit()
+				return success(media.to_hash())
+	return error("");
 #
 # Context
 #

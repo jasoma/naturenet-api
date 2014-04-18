@@ -58,9 +58,18 @@ public class AccountTest {
 	@Test
 	public void  create_new() {
 		String newname = randomIdentifier();
-		post("/account/new/" + newname).
-			then().
-			body("data.username", equalTo(newname));
+		String email = newname + "@email.com";
+		given().
+	 		param("name", "Real Name").
+	 		param("email", email).
+	 		param("consent", "new consent text").
+	 		param("password", "1234").
+	 	when().
+	 		post("/account/new/" + newname).
+		then().
+			body("data.username", equalTo(newname)).
+			body("data.email", equalTo(email)).
+			body("data.consent", equalTo("new consent text"));			
 	}
 
 	@Test

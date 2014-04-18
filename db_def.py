@@ -13,18 +13,30 @@ db = SQLAlchemy(app)
 
 class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=False)
+    username = db.Column(db.String(80), unique=True)
+    name = db.Column(db.String(80), unique=False)
+    consent = db.Column(db.Text())
+    password = db.Column(db.String(20))
+    email = db.Column(db.String(80))
 
     #notes = relationship("Note", order_by="Note.id", backref="account")
 
     def __init__(self, username):    	
-        self.username = username        
+        self.username = username 
 
     def __repr__(self):
         return '<Account username:%r>' % self.username
 
-    def to_hash(self):
+    def to_hash_short(self):
         return {'id': self.id, 'username': self.username}
+
+    def to_hash(self): 
+        return {'id': self.id, 
+            'username': self.username,
+            'name' : self.name,
+            'email' : self.email,
+            'consent' : self.consent,
+            'password' : self.password}        
 
     def to_json(self):
     	return json.dumps(self.to_hash())
@@ -97,7 +109,7 @@ class Media(db.Model):
 
     def get_url(self):
         if self.kind == 'Photo':
-            return "https://dl.dropboxusercontent.com/u/5104407/nntest/" + self.link
+            return self.link
         else:
             return "http://youtu.be/" + self.link
 

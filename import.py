@@ -22,6 +22,10 @@ for i in range(2,2+n):
 	id = account_sheet.cell('A' + str(i)).value	
 	username = account_sheet.cell('B' + str(i)).value
 	account = Account(username)
+	account.name = account_sheet.cell('C' + str(i)).value
+	account.email = account_sheet.cell('D' + str(i)).value
+	account.password = account_sheet.cell('E' + str(i)).value
+	account.consent = account_sheet.cell('F' + str(i)).value
 	if id:
 		print "create account: %s" % account
 		db.session.add(account)

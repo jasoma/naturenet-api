@@ -51,22 +51,25 @@ def api_accounts_count():
 	n = Account.query.count()
 	return jsonify({'success' : True, 'data' : n})
 
-@app.route('/api/account/new/<username>', methods = ['POST'])
+@app.route('/api/account/new/<username>', methods = ['POST','GET'])
 def api_account_new(username):
-	f = request.form
-	if username and 'email' in f and 'name' in f and 'consent' in f and 'password' in f:
-		account = Account.query.filter_by(username=username).first()
-		if not account:
-			newAccount = Account(username)		
-			newAccount.name = f['name']
-			newAccount.email = f['email']
-			newAccount.consent = f['consent']
-			newAccount.password = f['password']
-			db.session.add(newAccount)
-			db.session.commit()
-			return success(newAccount.to_hash())		
-		return error("Username %s is already taken" % username)
-	return error("Username is not specified")
+	if request.method == 'POST':
+		f = request.form
+		if username and 'email' in f and 'name' in f and 'consent' in f and 'password' in f:
+			account = Account.query.filter_by(username=username).first()
+			if not account:
+				newAccount = Account(username)		
+				newAccount.name = f['name']
+				newAccount.email = f['email']
+				newAccount.consent = f['consent']
+				newAccount.password = f['password']
+				db.session.add(newAccount)
+				db.session.commit()
+				return success(newAccount.to_hash())		
+			return error("Username %s is already taken" % username)
+		return error("Username is not specified")
+	else:
+		return error("the request to add [%s] must be done through a post" % username)
 
 @app.route('/api/account/<username>')
 def api_account_get(username):
@@ -106,21 +109,24 @@ def api_note_get_feedbacks(id):
 	return success([x.to_hash() for x in feedbacks])
 
 
-@app.route('/api/note/new/<username>', methods = ['POST'])
+@app.route('/api/note/new/<username>', methods = ['POST', 'GET'])
 def api_note_create(username):
-	obj = request.form	
-	if username and obj and 'content' in obj and 'context' in obj and 'kind' in obj:
-		content = obj['content']
-		context = obj['context']
-		kind = obj['kind']
-		a = Account.query.filter_by(username=username).first()
-		c = Context.query.filter_by(name=context).first()
-		if a and c:
-			note = Note(a.id, c.id, kind, content)
-			db.session.add(note)
-			db.session.commit()
-			return success(note.to_hash())
-	return error("some parameters are missing")
+	if request.method == 'POST':
+		obj = request.form	
+		if username and obj and 'content' in obj and 'context' in obj and 'kind' in obj:
+			content = obj['content']
+			context = obj['context']
+			kind = obj['kind']
+			a = Account.query.filter_by(username=username).first()
+			c = Context.query.filter_by(name=context).first()
+			if a and c:
+				note = Note(a.id, c.id, kind, content)
+				db.session.add(note)
+				db.session.commit()
+				return success(note.to_hash())
+		return error("some parameters are missing")
+	else:
+		return error("the request must be a post")
 
 #
 # Media
@@ -149,39 +155,35 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
-@app.route('/api/note/<id>/new/photo', methods = ['POST'])
+@app.route('/api/note/<id>/new/photo', methods = ['POST','GET'])
 def api_media_create(id):
-	print request.files
-	print request.form
-	#if "title" in 
-	# # obj = json.loads(request.data)
-	# if obj and 'kind' in obj and 'title' in obj and 'note_id' in obj:
-	
-		# link = "unknown"
-	link = ""
-	title = request.form["title"] or ""
-	# 	note_id = obj['note_id']
-	kind = "Photo"
-	note = Note.query.get(int(id))
-	if note:
-		media = Media(note.id, kind, title, link) 
-		db.session.add(media)
-		db.session.commit()
-		file = request.files['file']
-		if file and allowed_file(file.filename):
-			filename = secure_filename(file.filename)
-			file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-			print "saving locally to " + filename
-			response = cloudinary.uploader.upload(file, public_id = media.id)
-			print "uploading to cloudinary .."
-			if response:
-				# r = json.loads(ret)
-				print response['url']
-				media.link = response['url']
-				db.session.add(media)
-				db.session.commit()
-				return success(media.to_hash())
-	return error("");
+	if request.method == 'POST':
+		print request.files
+		print request.form
+		link = ""
+		title = request.form["title"] or ""
+		kind = "Photo"
+		note = Note.query.get(int(id))
+		if note:
+			media = Media(note.id, kind, title, link) 
+			db.session.add(media)
+			db.session.commit()
+			file = request.files['file']
+			if file and allowed_file(file.filename):
+				filename = secure_filename(file.filename)
+				file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+				print "saving locally to " + filename
+				response = cloudinary.uploader.upload(file, public_id = media.id)
+				print "uploading to cloudinary .."
+				if response:
+					print response['url']
+					media.link = response['url']
+					db.session.add(media)
+					db.session.commit()
+					return success(media.to_hash())
+		return error("note id %d is invalid" % id);
+	else:
+		return error("adding a media object to note {%s}, this request must be a post." % id)
 #
 # Context
 #
@@ -223,38 +225,46 @@ def api_feedback_get(id):
 	return success(feedback.to_hash())	
 
 @app.route('/api/note/<id>/feedback/<username>/new/comment',
-	methods = ['POST'])
+	methods = ['POST', 'GET'])
 def api_feedback_add_to_note(id,username):
-	note = Note.query.get(id)
-	account = Account.query.filter_by(username=username).first()
-	if note and account and 'content' in request.form:
-		kind = "Comment"
-		content = request.form['content']
-		table_name = "Note"
-		row_id = id
-		feedback = Feedback(account.id, kind, content, table_name, row_id)
-		db.session.add(feedback)
-		db.session.commit()	
-		return success(feedback.to_hash())	
-
-	return success({'success': False})
+	if request.method == 'POST':
+		note = Note.query.get(id)
+		account = Account.query.filter_by(username=username).first()
+		if note and account and 'content' in request.form:
+			kind = "Comment"
+			content = request.form['content']
+			table_name = "Note"
+			row_id = id
+			feedback = Feedback(account.id, kind, content, table_name, row_id)
+			db.session.add(feedback)
+			db.session.commit()	
+			return success(feedback.to_hash())	
+		return error("something wrong")
+	else:
+		return error("add feedback to note [%s] by [%s], this operation must be done through a post" %
+			(id, username))
 
 @app.route('/api/media/<id>/feedback/<username>/new/comment',
-	methods = ['POST'])
+	methods = ['POST','GET'])
 def api_feedback_add_to_media(id,username):
-	media = Media.query.get(id)
-	account = Account.query.filter_by(username=username).first()
-	if media and account and 'content' in request.form:
-		kind = "Comment"
-		content = request.form['content']
-		table_name = "Media"
-		row_id = id
-		feedback = Feedback(account.id, kind, content, table_name, row_id)
-		db.session.add(feedback)
-		db.session.commit()	
-		return success(feedback.to_hash())	
+	if request.method == 'POST':
+		media = Media.query.get(id)
+		account = Account.query.filter_by(username=username).first()
+		if media and account and 'content' in request.form:
+			kind = "Comment"
+			content = request.form['content']
+			table_name = "Media"
+			row_id = id
+			feedback = Feedback(account.id, kind, content, table_name, row_id)
+			db.session.add(feedback)
+			db.session.commit()	
+			return success(feedback.to_hash())	
 
-	return success({'success': False})	
+		return success({'success': False})	
+	else:
+		return error("add feedback to media [%s] by [%s], this operation must be done through a post" %
+			(id, username))
+
 
 if __name__ == '__main__':
     app.run(debug  = True)

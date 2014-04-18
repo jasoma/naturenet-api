@@ -6,6 +6,7 @@ from db_def import Note
 from db_def import Media
 from db_def import Context
 from db_def import Feedback
+from db_def import Site
 
 db.drop_all()
 db.create_all()
@@ -16,6 +17,17 @@ account_sheet = wb.get_sheet_by_name(name = 'Account')
 note_sheet = wb.get_sheet_by_name(name = 'Note')
 context_sheet = wb.get_sheet_by_name(name = 'Context')
 feedback_sheet = wb.get_sheet_by_name(name = 'Feedback')
+site_sheet = wb.get_sheet_by_name(name = 'Site')
+
+n = site_sheet.cell('A1').value
+for i in range(2,2+n):
+	name = site_sheet.cell('B' + str(i)).value	
+	description  = site_sheet.cell('C' + str(i)).value
+
+	site = Site(name, description)
+	db.session.add(site)
+	db.session.commit()		
+	print "create site: %s" % site		
 
 n = account_sheet.cell('A1').value
 for i in range(2,2+n):
@@ -37,7 +49,11 @@ for i in range(2,2+n):
 	kind = context_sheet.cell('B' + str(i)).value
 	name = context_sheet.cell('C' + str(i)).value
 	description = context_sheet.cell('D' + str(i)).value
+	site = context_sheet.cell('E' + str(i)).value
 	context = Context(kind, name, description)
+
+	site = Site.query.filter_by(name=site).first()
+	context.site_id = site.id
 
 	if id:
 		print "create context: %s" % context
@@ -84,6 +100,7 @@ for i in range(2,2+n):
 		db.session.add(feedback)
 		db.session.commit()		
 		print "create feedback: %s" % feedback		
+
 
 
 #print sheet_ranges.cell('B2').value # D18

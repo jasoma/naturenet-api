@@ -13,6 +13,7 @@ from db_def import Note
 from db_def import Context
 from db_def import Media
 from db_def import Feedback
+from db_def import Site
 
 
 import cloudinary
@@ -190,28 +191,25 @@ def api_media_create(id):
 @app.route('/api/context/<id>')
 def api_context_get(id):
 	context = Context.query.get(id)
-	return jsonify({'success': True, 'context' : context.to_hash()})	
+	return success(context.to_hash())	
 
 @app.route('/api/context/<id>/notes')
 def api_context_get_all_notes(id):
 	context = Context.query.get(id)
 	if context:
 		items = context.notes
-		return jsonify({'success': True, 
-			"notes" : [x.to_hash() for x in items]})
+		return success([x.to_hash() for x in items])
 
 
 @app.route('/api/context/activities')
 def api_context_get_all_activities():
 	items = Context.query.filter_by(kind='Activity').all()
-	return jsonify({'success': True, 
-		"contexts" : [x.to_hash() for x in items]})
+	return success([x.to_hash() for x in items])
 
 @app.route('/api/context/landmarks')
 def api_context_get_all_landmarks():
 	items = Context.query.filter_by(kind='Landmark').all()
-	return jsonify({'success': True, 
-		"contexts" : [x.to_hash() for x in items]})
+	return success([x.to_hash() for x in items])
 
 
 
@@ -264,6 +262,32 @@ def api_feedback_add_to_media(id,username):
 	else:
 		return error("add feedback to media [%s] by [%s], this operation must be done through a post" %
 			(id, username))
+
+
+
+#
+# Site
+#
+@app.route('/api/site/<name>')
+def api_site_get(name):
+	site = Site.query.filter_by(name=name).first()
+	if site:
+		return success(site.to_hash())
+	else:
+		return error("site does not exist")
+
+@app.route('/api/sites')
+def api_site_list():
+	sites = Site.query.all()
+	return success([x.to_hash() for x in sites])
+
+@app.route('/api/site/<name>/contexts')
+def api_site_list_contexts(name):
+	site = Site.query.filter_by(name=name).first()
+	if site:
+		return success([x.to_hash() for x in site.contexts])
+	else:
+		return error("site does not exist")
 
 
 if __name__ == '__main__':

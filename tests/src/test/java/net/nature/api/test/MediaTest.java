@@ -27,11 +27,11 @@ public class MediaTest {
 
 	@Before
 	public void setUp(){
-		RestAssured.baseURI = "http://naturenet.herokuapp.com";
-		RestAssured.port = 80;
+//		RestAssured.baseURI = "http://naturenet.herokuapp.com";
+//		RestAssured.port = 80;
 		
-//		RestAssured.baseURI = "http://localhost";
-//		RestAssured.port = 5000;
+		RestAssured.baseURI = "http://localhost";
+		RestAssured.port = 5000;
 		RestAssured.basePath = "/api";
 	}
 

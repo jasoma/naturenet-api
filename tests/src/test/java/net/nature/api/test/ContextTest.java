@@ -19,25 +19,25 @@ public class ContextTest {
 	}
 	
 	@Test
-	public void  get_single_note() {
-		get("/context/1").then().body("context.kind", equalTo("Activity"))
-			.and().body("context.name", equalTo("ask"));
+	public void  get_single_context() {
+		get("/context/1").then().body("data.kind", equalTo("Activity"))
+			.and().body("data.name", equalTo("ask"));
 	}
 	
 	@Test
 	public void  get_notes() {
-		get("/context/1/notes").then().body("notes.context.id", everyItem(equalTo(1)));
+		get("/context/1/notes").then().body("data.context.id", everyItem(equalTo(1)));
 	}
 
 	@Test
 	public void  get_all_activities() {
-		get("/context/activities").then().body("contexts.kind", everyItem(equalTo("Activity")));
+		get("/context/activities").then().body("data.kind", everyItem(equalTo("Activity")));
 	}
 
 
 	@Test
 	public void  get_all_landmarks() {
-		get("/context/landmarks").then().body("contexts.kind", everyItem(equalTo("Landmark")));
+		get("/context/landmarks").then().body("data.kind", everyItem(equalTo("Landmark")));
 	}
 
 }

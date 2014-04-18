@@ -11,6 +11,26 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
 
+class Site(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.Text())
+
+    def __init__(self, name, description):       
+        self.name = name
+        self.description = description 
+
+    def __repr__(self):
+        return '<Site name:%r>' % self.name
+
+    def to_hash(self): 
+        return {'id': self.id, 
+            'name' : self.name,
+            'description' : self.description}
+
+    def to_json(self):
+        return json.dumps(self.to_hash())
+
 class Account(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True)
@@ -47,6 +67,9 @@ class Context(db.Model):
     kind = db.Column(db.String(40))
     name = db.Column(db.Text())
     description = db.Column(db.Text())    
+    site_id = db.Column(db.Integer, ForeignKey('site.id'))
+
+    site = relationship("Site", backref=backref('contexts', order_by=id))
 
     def __init__(self, kind, name, description):               
         self.kind = kind
@@ -58,7 +81,7 @@ class Context(db.Model):
 
     def to_hash(self):
         return {'id': self.id, 'kind': self.kind, 'name' : self.name, 
-            'description' : self.description}            
+            'description' : self.description, 'site' : self.site.to_hash()}            
 
 
 class Note(db.Model):

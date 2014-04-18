@@ -171,8 +171,8 @@ def api_media_create(id):
 			file = request.files['file']
 			if file and allowed_file(file.filename):
 				filename = secure_filename(file.filename)
-				file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-				print "saving locally to " + filename
+				#file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+				#print "saving locally to " + filename
 				response = cloudinary.uploader.upload(file, public_id = media.id)
 				print "uploading to cloudinary .."
 				if response:

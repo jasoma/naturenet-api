@@ -15,6 +15,7 @@ from db_def import Media
 from db_def import Feedback
 from db_def import Site
 
+import datetime
 
 import cloudinary
 import cloudinary.api
@@ -289,6 +290,26 @@ def api_site_list_contexts(name):
 	else:
 		return error("site does not exist")
 
+#
+# Sync
+#
+# @app.route('/api/sync/accounts/since/<year>/<month>/<date>')
+# def api_sync_account_since_date(year,month,date):
+# 	since_date = datetime.date(int(year),int(month),int(date))
+# 	accounts = Account.query.filter(Account.created_at  >= since_date).all()
+	# return success([x.to_hash() for x in accounts])
+
+@app.route('/api/sync/accounts/since/<year>/<month>/<date>/<hour>/<minute>')
+def api_sync_account_since_minute(year,month,date,hour,minute):
+	since_date = datetime.datetime(int(year),int(month),int(date),int(hour),int(minute))
+	accounts = Account.query.filter(Account.created_at  >= since_date).all()
+	return success([x.to_hash() for x in accounts])
+
+
+@app.route('/api/sync/accounts/since/<datetime_long>')
+def api_sync_account_since_long(datetime_long):
+	print datetime_long
+	return success([])
 
 if __name__ == '__main__':
     app.run(debug  = True)

@@ -38,6 +38,7 @@ class Account(db.Model):
     consent = db.Column(db.Text())
     password = db.Column(db.String(20))
     email = db.Column(db.String(80))
+    created_at = db.Column(db.DateTime())
 
     #notes = relationship("Note", order_by="Note.id", backref="account")
 
@@ -56,7 +57,8 @@ class Account(db.Model):
             'name' : self.name,
             'email' : self.email,
             'consent' : self.consent,
-            'password' : self.password}        
+            'password' : self.password,
+            'created_at' : self.created_at}        
 
     def to_json(self):
     	return json.dumps(self.to_hash())

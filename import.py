@@ -1,5 +1,7 @@
 from openpyxl.reader.excel import load_workbook
 
+import datetime
+
 from db_def import db
 from db_def import Account
 from db_def import Note
@@ -29,6 +31,9 @@ for i in range(2,2+n):
 	db.session.commit()		
 	print "create site: %s" % site		
 
+
+created_at = datetime.date(2014,3,1)
+
 n = account_sheet.cell('A1').value
 for i in range(2,2+n):
 	id = account_sheet.cell('A' + str(i)).value	
@@ -38,6 +43,9 @@ for i in range(2,2+n):
 	account.email = account_sheet.cell('D' + str(i)).value
 	account.password = account_sheet.cell('E' + str(i)).value
 	account.consent = account_sheet.cell('F' + str(i)).value
+
+	created_at += datetime.timedelta(days=1)
+	account.created_at = created_at
 	if id:
 		print "create account: %s" % account
 		db.session.add(account)
@@ -72,6 +80,7 @@ for i in range(2,2+n):
 	media_kind  = note_sheet.cell('F' + str(i)).value	
 	media_title = note_sheet.cell('G' + str(i)).value	
 	media_url = note_sheet.cell('H' + str(i)).value	
+	media_url = "https://dl.dropboxusercontent.com/u/5104407/nntest/" + media_url
 
 	if id:
 		a = Account.query.filter_by(username=username).first()

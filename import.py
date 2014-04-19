@@ -68,6 +68,7 @@ for i in range(2,2+n):
 		db.session.add(context)
 		db.session.commit()
 
+created_at = datetime.datetime(2014,4,1,0,0)
 
 n = note_sheet.cell('A1').value
 for i in range(2,2+n):
@@ -86,11 +87,15 @@ for i in range(2,2+n):
 		a = Account.query.filter_by(username=username).first()
 		c = Context.query.filter_by(name=context).first()
 		note = Note(a.id, c.id, kind, content)
+		note.created_at = created_at
+		created_at += datetime.timedelta(seconds=100)		
 		print "create note: %s" % note
 		db.session.add(note)
 		db.session.commit()
 		
 		media = Media(note.id, media_kind, media_title, media_url) 
+		media.created_at = created_at
+		created_at += datetime.timedelta(seconds=60)		
 		print "create media: %s" % media
 		db.session.add(media)
 		db.session.commit()

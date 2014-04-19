@@ -5,6 +5,7 @@ from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
 import json
+import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
@@ -90,6 +91,8 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kind = db.Column(db.String(40), unique=False)
     content = db.Column(db.Text())
+    created_at = db.Column(db.DateTime())
+
     account_id = db.Column(db.Integer, ForeignKey('account.id'))
     context_id = db.Column(db.Integer, ForeignKey('context.id'))
 
@@ -101,12 +104,14 @@ class Note(db.Model):
         self.context_id = context_id
         self.kind = kind
         self.content = content
+        self.created_at = datetime.datetime.now()
 
     def __repr__(self):
         return '<Note kind:%r, content:%r>' % (self.kind, self.content)
 
     def to_hash(self):
         return {'id': self.id, 'kind': self.kind, 'content' : self.content, 
+            'created_at' : self.created_at,
             'medias' : [ x.to_hash() for x in self.medias],
             'context' : self.context.to_hash(),
             'account' : self.account.to_hash()}
@@ -119,6 +124,8 @@ class Media(db.Model):
     kind = db.Column(db.String(40))
     link = db.Column(db.Text())
     title = db.Column(db.Text())
+    created_at = db.Column(db.DateTime())
+
     note_id = db.Column(db.Integer, ForeignKey('note.id'))
 
     note = relationship("Note", backref=backref('medias', order_by=id))
@@ -128,6 +135,7 @@ class Media(db.Model):
         self.kind = kind
         self.title = title
         self.link = link
+        self.created_at = datetime.datetime.now()
 
     def __repr__(self):
         return '<Media title:%r>' % self.title
@@ -139,7 +147,11 @@ class Media(db.Model):
             return "http://youtu.be/" + self.link
 
     def to_hash(self):        
-        return {'id' : self.id, 'kind': self.kind, 'title' : self.title, 'link' : self.get_url()}
+        return {'id' : self.id, 
+        'kind': self.kind, 
+        'created_at' : self.created_at,
+        'title' : self.title, 
+        'link' : self.get_url()}
 
     def to_json(self):
         return json.dumps(self.to_hash())
@@ -151,6 +163,7 @@ class Feedback(db.Model):
     content = db.Column(db.Text())
     table_name = db.Column(db.String(20))
     row_id = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime())
 
     account = relationship("Account", backref=backref('feedbacks', order_by=id))
 
@@ -160,12 +173,14 @@ class Feedback(db.Model):
         self.table_name = table_name
         self.kind = kind
         self.content = content
+        self.created_at = datetime.datetime.now()
 
     def __repr__(self):
         return '<Feedback by %s: %s on %s: %s >' % (self.account, self.kind, self.table_name, self.content)
 
     def to_hash(self):        
         return {'kind' : self.kind, 'content': self.content,
+            'created_at' : self.created_at,
             'account': self.account.to_hash(),
             'model': self.table_name}
 

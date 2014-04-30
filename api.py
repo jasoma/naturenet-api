@@ -105,7 +105,7 @@ def api_note_get(id):
 	return success(note.to_hash())
 
 @app.route('/api/notes')
-def api_note_list(id):
+def api_note_list():
 	notes = Note.query.all()
 	return success([x.to_hash() for x in notes])
 

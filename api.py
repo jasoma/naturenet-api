@@ -104,6 +104,11 @@ def api_note_get(id):
 	note = Note.query.get(id)
 	return success(note.to_hash())
 
+@app.route('/api/notes')
+def api_note_list(id):
+	notes = Note.query.all()
+	return success([x.to_hash() for x in notes])
+
 @app.route('/api/note/<id>/feedbacks')
 def api_note_get_feedbacks(id):
 	note = Note.query.filter_by(id=id).first()

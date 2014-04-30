@@ -139,6 +139,11 @@ def api_note_create(username):
 # Media
 #
 
+@app.route('/api/medias')
+def api_media_list():
+	medias = Media.query.all()
+	return success([x.to_hash() for x in medias])
+
 @app.route('/api/media/<id>')
 def api_media_get(id):
 	media = Media.query.get(id)

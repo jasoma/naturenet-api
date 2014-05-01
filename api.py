@@ -199,6 +199,13 @@ def api_media_create(id):
 #
 # Context
 #
+
+
+@app.route('/api/contexts')
+def api_context_list():
+	contexts = Context.query.all()
+	return success([x.to_hash() for x in contexts])
+
 @app.route('/api/context/<id>')
 def api_context_get(id):
 	context = Context.query.get(id)

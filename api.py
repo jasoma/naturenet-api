@@ -5,6 +5,7 @@ from flask import Response
 from flask import render_template
 from flask_bootstrap import Bootstrap
 from flask import jsonify
+from flask.json import JSONEncoder
 
 from db_def import db
 from db_def import app
@@ -15,7 +16,8 @@ from db_def import Media
 from db_def import Feedback
 from db_def import Site
 
-import datetime
+from datetime import datetime
+import calendar
 
 import cloudinary
 import cloudinary.api
@@ -32,6 +34,27 @@ import json
 import psycopg2
 
 Bootstrap(app)
+
+class CustomJSONEncoder(JSONEncoder):
+
+    def default(self, obj):
+        try:
+            if isinstance(obj, datetime):
+                if obj.utcoffset() is not None:
+                    obj = obj - obj.utcoffset()
+                millis = int(
+                    calendar.timegm(obj.timetuple()) * 1000 +
+                    obj.microsecond / 1000
+                )
+                return millis
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return JSONEncoder.default(self, obj)
+
+app.json_encoder = CustomJSONEncoder  
 
 def success(data):
 	return jsonify({"status_code": 200, "status_txt": "OK", 		

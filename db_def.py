@@ -4,13 +4,16 @@ from sqlalchemy.orm import relationship, backref
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 
+
 import json
 import datetime
+from time import strftime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
+      
 
 class Site(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +65,7 @@ class Account(db.Model):
             'created_at' : self.created_at}        
 
     def to_json(self):
-    	return json.dumps(self.to_hash())
+    	return jsonify(self.to_hash())
 
 
 class Context(db.Model):

@@ -88,6 +88,7 @@ def api_account_new(username):
 				newAccount.email = f['email']
 				newAccount.consent = f['consent']
 				newAccount.password = f['password']
+				newAccount.created_at = datetime.now()
 				db.session.add(newAccount)
 				db.session.commit()
 				return success(newAccount.to_hash())		

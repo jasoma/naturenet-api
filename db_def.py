@@ -96,6 +96,9 @@ class Note(db.Model):
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime())
 
+    longitude = db.Column(db.Float())
+    latitude = db.Column(db.Float())
+
     account_id = db.Column(db.Integer, ForeignKey('account.id'))
     context_id = db.Column(db.Integer, ForeignKey('context.id'))
 
@@ -115,6 +118,8 @@ class Note(db.Model):
     def to_hash(self):
         return {'id': self.id, 'kind': self.kind, 'content' : self.content, 
             'created_at' : self.created_at,
+            'latitude' : self.latitude,
+            'longitude' : self.longitude,            
             'medias' : [ x.to_hash() for x in self.medias],
             'context' : self.context.to_hash(),
             'account' : self.account.to_hash()}

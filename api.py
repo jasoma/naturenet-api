@@ -146,12 +146,15 @@ def api_note_create(username):
 		obj = request.form	
 		if username and obj and 'content' in obj and 'context' in obj and 'kind' in obj:
 			content = obj['content']
-			context = obj['context']
-			kind = obj['kind']
+			context = obj['context']			
+			kind = obj['kind']			
 			a = Account.query.filter_by(username=username).first()
 			c = Context.query.filter_by(name=context).first()
 			if a and c:
 				note = Note(a.id, c.id, kind, content)
+				if 'longitude' in obj and 'latitude' in obj:
+					note.longitude = obj['longitude']
+					note.latitude = obj['latitude']
 				db.session.add(note)
 				db.session.commit()
 				return success(note.to_hash())

@@ -2,7 +2,7 @@ package net.nature.api.test;
 
 import static com.jayway.restassured.RestAssured.get;
 import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,15 +31,19 @@ public class NoteTest {
 	public void  create_succeed() {
 		given().
 	 		param("content", "new note").
-	 		param("context", "ask").
+	 		param("context", "Trees").
 	 		param("kind", "FieldNote").
+	 		param("latitude", -33.4304234).
+	 		param("longitude", 153.232431).
 	 	when().
 	 		post("/note/new/tomyeh").
 	 	then().
 	 		body("data.kind", equalTo("FieldNote")).
 	 		body("data.content", equalTo("new note")).
-	 		body("data.context.name", equalTo("ask")).
-	 		body("data.account.username", equalTo("tomyeh"));
+	 		body("data.context.name", equalTo("Trees")).
+	 		body("data.account.username", equalTo("tomyeh")).
+	 		body("data.latitude", equalTo(-33.4304234f)).
+			body("data.longitude", equalTo(153.232431f));
 	}
 
 	@Test

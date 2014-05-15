@@ -203,7 +203,7 @@ def api_media_create(id):
 		title = request.files["title"] or request.form["title"] or ""
 		kind = "Photo"
 		note = Note.query.get(int(id))
-		print "note: " + note
+		print "note: %s" % note
 		if note:
 			media = Media(note.id, kind, title, link) 
 			db.session.add(media)
@@ -221,7 +221,8 @@ def api_media_create(id):
 					db.session.add(media)
 					db.session.commit()
 			return success(media.to_hash())
-		return error("note id %d is invalid" % id);
+		else:
+			return error("note id %d is invalid" % id);
 	else:
 		return error("adding a media object to note {%s}, this request must be a post." % id)
 #

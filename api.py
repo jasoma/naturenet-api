@@ -199,10 +199,11 @@ def api_media_create(id):
 	if request.method == 'POST':
 		print request.files
 		print request.form
-		link = request.form["link"] or ""
-		title = request.form["title"] or ""
+		link = request.files["link"] or ""
+		title = request.files["title"] or ""
 		kind = "Photo"
 		note = Note.query.get(int(id))
+		print note
 		if note:
 			media = Media(note.id, kind, title, link) 
 			db.session.add(media)

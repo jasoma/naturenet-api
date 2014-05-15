@@ -202,7 +202,8 @@ def api_media_create(id):
 		link = request.files["link"] or request.form["link"] or ""
 		title = request.files["title"] or request.form["title"] or ""
 		kind = "Photo"
-		note = Note.query.get(int(id))
+		note = Note.query.get(id)
+		print "id: %s" % id
 		print "note: %s" % note
 		if note:
 			media = Media(note.id, kind, title, link) 

@@ -197,8 +197,8 @@ def allowed_file(filename):
 @app.route('/api/note/<id>/new/photo', methods = ['POST','GET'])
 def api_media_create(id):
 	if request.method == 'POST':
-		print request.files
-		print request.form
+		print "files: " + request.files
+		print "form: " + request.form
 		link = request.files["link"] or request.form["link"] or ""
 		title = request.files["title"] or request.form["title"] or ""
 		kind = "Photo"

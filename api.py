@@ -203,11 +203,11 @@ def api_media_create(id):
 		title = request.form.get("title","")#files["title"] or request.form["title"] or ""
 		kind = "Photo"
 		note = Note.query.get(id)
+		print "note: %s" % note
 		if note:
-			media = Media(note.id, kind, title, link) 
-			#db.session.add(media)
-			#db.session.commit()
-			file = request.get("file",None)
+			media = Media(note.id, kind, title, link)
+			file = request.files.get("file",None)
+			print "file: %s" % file
 			if file and allowed_file(file.filename):
 				filename = secure_filename(file.filename)
 				#file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))

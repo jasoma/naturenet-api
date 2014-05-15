@@ -199,7 +199,7 @@ def api_media_create(id):
 	if request.method == 'POST':
 		print request.files
 		print request.form
-		link = ""
+		link = request.form["link"] or ""
 		title = request.form["title"] or ""
 		kind = "Photo"
 		note = Note.query.get(int(id))
@@ -219,7 +219,7 @@ def api_media_create(id):
 					media.link = response['url']
 					db.session.add(media)
 					db.session.commit()
-					return success(media.to_hash())
+			return success(media.to_hash())
 		return error("note id %d is invalid" % id);
 	else:
 		return error("adding a media object to note {%s}, this request must be a post." % id)

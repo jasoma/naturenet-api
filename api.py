@@ -199,17 +199,14 @@ def api_media_create(id):
 	if request.method == 'POST':
 		print "files: %s" % request.files
 		print "form: %s" % request.form
-		print "id: %s" % id
 		link = request.form.get("link","")#["link"] or request.form["link"] or ""
 		title = request.form.get("title","")#files["title"] or request.form["title"] or ""
 		kind = "Photo"
-		print "id: %s" % id
 		note = Note.query.get(id)
-		print "note: %s" % note
 		if note:
 			media = Media(note.id, kind, title, link) 
-			db.session.add(media)
-			db.session.commit()
+			#db.session.add(media)
+			#db.session.commit()
 			file = request.get("file",None)
 			if file and allowed_file(file.filename):
 				filename = secure_filename(file.filename)
@@ -220,8 +217,8 @@ def api_media_create(id):
 				if response:
 					print response['url']
 					media.link = response['url']
-					db.session.add(media)
-					db.session.commit()
+			db.session.add(media)
+			db.session.commit()
 			return success(media.to_hash())
 		else:
 			return error("note id %d is invalid" % id);

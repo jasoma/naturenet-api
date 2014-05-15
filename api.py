@@ -199,6 +199,7 @@ def api_media_create(id):
 	if request.method == 'POST':
 		print "files: %s" % request.files
 		print "form: %s" % request.form
+		print "id: %s" % id
 		link = request.files["link"] or request.form["link"] or ""
 		title = request.files["title"] or request.form["title"] or ""
 		kind = "Photo"

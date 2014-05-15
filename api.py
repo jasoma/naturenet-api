@@ -200,8 +200,8 @@ def api_media_create(id):
 		print "files: %s" % request.files
 		print "form: %s" % request.form
 		print "id: %s" % id
-		link = request.files["link"] or request.form["link"] or ""
-		title = request.files["title"] or request.form["title"] or ""
+		link = request.form.get("link","")#["link"] or request.form["link"] or ""
+		title = request.form.get("title","")#files["title"] or request.form["title"] or ""
 		kind = "Photo"
 		print "id: %s" % id
 		note = Note.query.get(id)

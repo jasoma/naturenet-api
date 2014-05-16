@@ -3,9 +3,12 @@ from flask import Flask
 from flask import request
 from flask import Response
 from flask import render_template
+from flask import make_response, current_app
 from flask_bootstrap import Bootstrap
 from flask import jsonify
 from flask.json import JSONEncoder
+
+from functools import update_wrapper
 
 from db_def import db
 from db_def import app
@@ -17,6 +20,7 @@ from db_def import Feedback
 from db_def import Site
 
 from datetime import datetime
+from datetime import timedelta
 import calendar
 
 import cloudinary
@@ -29,6 +33,48 @@ cloudinary.config(
   api_key = '893246586645466',  
   api_secret = '8Liy-YcDCvHZpokYZ8z3cUxCtyk'  
 )
+
+
+def crossdomain(origin=None, methods=None, headers=None,
+                max_age=21600, attach_to_all=True,
+                automatic_options=True):
+    if methods is not None:
+        methods = ', '.join(sorted(x.upper() for x in methods))
+    if headers is not None and not isinstance(headers, basestring):
+        headers = ', '.join(x.upper() for x in headers)
+    if not isinstance(origin, basestring):
+        origin = ', '.join(origin)
+    if isinstance(max_age, timedelta):
+        max_age = max_age.total_seconds()
+
+    def get_methods():
+        if methods is not None:
+            return methods
+
+        options_resp = current_app.make_default_options_response()
+        return options_resp.headers['allow']
+
+    def decorator(f):
+        def wrapped_function(*args, **kwargs):
+            if automatic_options and request.method == 'OPTIONS':
+                resp = current_app.make_default_options_response()
+            else:
+                resp = make_response(f(*args, **kwargs))
+            if not attach_to_all and request.method != 'OPTIONS':
+                return resp
+
+            h = resp.headers
+
+            h['Access-Control-Allow-Origin'] = origin
+            h['Access-Control-Allow-Methods'] = get_methods()
+            h['Access-Control-Max-Age'] = str(max_age)
+            if headers is not None:
+                h['Access-Control-Allow-Headers'] = headers
+            return resp
+
+        f.provide_automatic_options = False
+        return update_wrapper(wrapped_function, f)
+    return decorator
 
 import json
 import psycopg2
@@ -106,6 +152,7 @@ def api_account_get(username):
 		return error("user does not exist")
 
 @app.route('/api/account/<username>/notes')
+@crossdomain(origin='*')
 def api_account_get_notes(username):
 	account = Account.query.filter_by(username=username).first()	
 	return success([x.to_hash() for x in account.notes])
@@ -116,6 +163,7 @@ def api_account_get_feedbacks(username):
 	return success([x.to_hash() for x in account.feedbacks])
 
 @app.route('/api/accounts')
+@crossdomain(origin='*')
 def api_accounts_list():
 	accounts = Account.query.all()
 	return success([x.to_hash() for x in accounts])
@@ -363,4 +411,4 @@ def api_sync_note_recent(n):
 
 
 if __name__ == '__main__':
-    app.run(debug  = True)
+    app.run(debug  = True, host='0.0.0.0')

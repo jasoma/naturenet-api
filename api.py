@@ -144,6 +144,7 @@ def api_account_new(username):
 		return error("the request to add [%s] must be done through a post" % username)
 
 @app.route('/api/account/<username>')
+@crossdomain(origin='*')
 def api_account_get(username):
 	account = Account.query.filter_by(username=username).first()
 	if account:
@@ -158,6 +159,7 @@ def api_account_get_notes(username):
 	return success([x.to_hash() for x in account.notes])
 
 @app.route('/api/account/<username>/feedbacks')
+@crossdomain(origin='*')
 def api_account_get_feedbacks(username):
 	account = Account.query.filter_by(username=username).first()	
 	return success([x.to_hash() for x in account.feedbacks])
@@ -172,16 +174,19 @@ def api_accounts_list():
 # Note
 #
 @app.route('/api/note/<id>')
+@crossdomain(origin='*')
 def api_note_get(id):
 	note = Note.query.get(id)
 	return success(note.to_hash())
 
 @app.route('/api/notes')
+@crossdomain(origin='*')
 def api_note_list():
 	notes = Note.query.all()
 	return success([x.to_hash() for x in notes])
 
 @app.route('/api/note/<id>/feedbacks')
+@crossdomain(origin='*')
 def api_note_get_feedbacks(id):
 	note = Note.query.filter_by(id=id).first()
 	feedbacks = Feedback.query.filter_by(table_name='Note', row_id=id).all()
@@ -220,6 +225,7 @@ def api_media_list():
 	return success([x.to_hash() for x in medias])
 
 @app.route('/api/media/<id>')
+@crossdomain(origin='*')
 def api_media_get(id):
 	media = Media.query.get(id)
 	if media:
@@ -228,6 +234,7 @@ def api_media_get(id):
 		return error("media object does not exist")
 
 @app.route('/api/media/<id>/feedbacks')
+@crossdomain(origin='*')
 def api_media_get_feedbacks(id):
 	feedbacks = Feedback.query.filter_by(table_name='Media', row_id=id).all()
 	return success([x.to_hash() for x in feedbacks])
@@ -277,16 +284,19 @@ def api_media_create(id):
 #
 
 @app.route('/api/contexts')
+@crossdomain(origin='*')
 def api_context_list_all():
 	contexts = Context.query.all()
 	return success([x.to_hash() for x in contexts])
 
 @app.route('/api/context/<id>')
+@crossdomain(origin='*')
 def api_context_get(id):
 	context = Context.query.get(id)
 	return success(context.to_hash())	
 
 @app.route('/api/context/<id>/notes')
+@crossdomain(origin='*')
 def api_context_get_all_notes(id):
 	context = Context.query.get(id)
 	if context:
@@ -295,11 +305,13 @@ def api_context_get_all_notes(id):
 
 
 @app.route('/api/context/activities')
+@crossdomain(origin='*')
 def api_context_get_all_activities():
 	items = Context.query.filter_by(kind='Activity').all()
 	return success([x.to_hash() for x in items])
 
 @app.route('/api/context/landmarks')
+@crossdomain(origin='*')
 def api_context_get_all_landmarks():
 	items = Context.query.filter_by(kind='Landmark').all()
 	return success([x.to_hash() for x in items])
@@ -311,6 +323,7 @@ def api_context_get_all_landmarks():
 #
 
 @app.route('/api/feedback/<id>')
+@crossdomain(origin='*')
 def api_feedback_get(id):
 	feedback = Feedback.query.get(id)
 	return success(feedback.to_hash())	
@@ -362,6 +375,7 @@ def api_feedback_add_to_media(id,username):
 # Site
 #
 @app.route('/api/site/<name>')
+@crossdomain(origin='*')
 def api_site_get(name):
 	site = Site.query.filter_by(name=name).first()
 	if site:
@@ -370,11 +384,13 @@ def api_site_get(name):
 		return error("site does not exist")
 
 @app.route('/api/sites')
+@crossdomain(origin='*')
 def api_site_list():
 	sites = Site.query.all()
 	return success([x.to_hash() for x in sites])
 
 @app.route('/api/site/<name>/contexts')
+@crossdomain(origin='*')
 def api_site_list_contexts(name):
 	site = Site.query.filter_by(name=name).first()
 	if site:

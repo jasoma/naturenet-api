@@ -379,7 +379,7 @@ def api_feedback_add_to_media(id,username):
 def api_site_get(name):
 	site = Site.query.filter_by(name=name).first()	
 	if site:
-		return success(notes.to_hash())
+		return success(site.to_hash())
 	else:
 		return error("site does not exist")
 

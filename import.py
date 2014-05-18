@@ -98,8 +98,8 @@ for i in range(2,2+n):
 		det2 = 1.0 + float(randint(1,100) - 50)/1000000				
 	else:
 		created_at = int(created_at)
-		det1 = 0.0
-		det2 = 0.0
+		det1 = 1.0
+		det2 = 1.0
 
 	date = datetime.datetime.fromtimestamp(created_at)
 	print date

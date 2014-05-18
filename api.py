@@ -406,7 +406,7 @@ def api_site_get_notes_user(name,username):
 		for c in site.contexts:
 			notes = Note.query.filter_by(account_id=account.id, context_id=c.id).all()
 			all_notes += notes
-		return success([x.to_hash() for x in notes])
+		return success([x.to_hash() for x in all_notes])
 	else:
 		return error("site does not exist")
 

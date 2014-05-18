@@ -10,8 +10,8 @@ import datetime
 from time import strftime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
       
 
@@ -71,22 +71,24 @@ class Account(db.Model):
 class Context(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     kind = db.Column(db.String(40))
-    name = db.Column(db.Text())
+    name = db.Column(db.String(40))
+    title = db.Column(db.Text())
     description = db.Column(db.Text())    
     site_id = db.Column(db.Integer, ForeignKey('site.id'))
 
     site = relationship("Site", backref=backref('contexts', order_by=id))
 
-    def __init__(self, kind, name, description):               
+    def __init__(self, kind, name, title, description):               
         self.kind = kind
         self.name = name
+        self.title = title
         self.description = description
 
     def __repr__(self):
         return '<Context kind:%r, name:%r>' % (self.kind, self.name)
 
     def to_hash(self):
-        return {'id': self.id, 'kind': self.kind, 'name' : self.name, 
+        return {'id': self.id, 'kind': self.kind, 'name' : self.name, 'title' : self.title,
             'description' : self.description, 'site' : self.site.to_hash()}            
 
 
@@ -150,7 +152,7 @@ class Media(db.Model):
 
     def get_url(self):
         if self.kind == 'Photo':
-            return self.link
+            return "http://res.cloudinary.com/university-of-colorado/image/upload/v1400187706/" + self.link
         else:
             return "http://youtu.be/" + self.link
 

@@ -55,9 +55,10 @@ for i in range(2,2+n):
 	id = note_sheet.cell('A' + str(i)).value	
 	kind = context_sheet.cell('B' + str(i)).value
 	name = context_sheet.cell('C' + str(i)).value
-	description = context_sheet.cell('D' + str(i)).value
-	site = context_sheet.cell('E' + str(i)).value
-	context = Context(kind, name, description)
+	title = context_sheet.cell('D' + str(i)).value
+	description = context_sheet.cell('E' + str(i)).value
+	site = context_sheet.cell('F' + str(i)).value
+	context = Context(kind, name, title, description)
 
 	site = Site.query.filter_by(name=site).first()
 	context.site_id = site.id
@@ -83,30 +84,41 @@ for i in range(2,2+n):
 	media_kind  = note_sheet.cell('F' + str(i)).value	
 	media_title = note_sheet.cell('G' + str(i)).value	
 	media_url = note_sheet.cell('H' + str(i)).value	
-	media_url = "https://dl.dropboxusercontent.com/u/5104407/nntest/" + media_url
+	# media_url = "https://dl.dropboxusercontent.com/u/5104407/nntest/" + media_url
+
 
 	latitude  = note_sheet.cell('I' + str(i)).value	
 	longitude  = note_sheet.cell('J' + str(i)).value		
+	created_at = note_sheet.cell('K' + str(i)).value
 
+	print created_at
+	if not created_at:
+		created_at = 1396325280
+		det1 = 1.0 + float(randint(1,100) - 50)/1000000
+		det2 = 1.0 + float(randint(1,100) - 50)/1000000				
+	else:
+		created_at = int(created_at)
+		det1 = 0.0
+		det2 = 0.0
+
+	date = datetime.datetime.fromtimestamp(created_at)
+	print date
 	if id:
 		a = Account.query.filter_by(username=username).first()
 		c = Context.query.filter_by(name=context).first()
 		note = Note(a.id, c.id, kind, content)
 
-		det1 = 1.0 + float(randint(1,100) - 50)/1000000
-		det2 = 1.0 + float(randint(1,100) - 50)/1000000		
-
 		note.latitude = float(latitude) * det1
-		note.longitude = float(longitude) * det2
-		note.created_at = created_at
-		created_at += datetime.timedelta(seconds=100)		
+		note.longitude = float(longitude) * det2		
+		note.created_at =  date
+		# created_at += datetime.timedelta(seconds=100)		
 		print "create note: %s" % note
 		db.session.add(note)
 		db.session.commit()
 		
 		media = Media(note.id, media_kind, media_title, media_url) 
-		media.created_at = created_at
-		created_at += datetime.timedelta(seconds=60)		
+		media.created_at = date
+		# created_at += datetime.timedelta(seconds=60)		
 		print "create media: %s" % media
 		db.session.add(media)
 		db.session.commit()

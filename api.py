@@ -377,9 +377,36 @@ def api_feedback_add_to_media(id,username):
 @app.route('/api/site/<name>')
 @crossdomain(origin='*')
 def api_site_get(name):
+	site = Site.query.filter_by(name=name).first()	
+	if site:
+		return success(notes.to_hash())
+	else:
+		return error("site does not exist")
+
+
+@app.route('/api/site/<name>/notes')
+@crossdomain(origin='*')
+def api_site_get_notes(name):
 	site = Site.query.filter_by(name=name).first()
 	if site:
-		return success(site.to_hash())
+		notes = []
+		for c in site.contexts:
+			notes += c.notes
+		return success([x.to_hash() for x in notes])
+	else:
+		return error("site does not exist")
+
+@app.route('/api/site/<name>/notes/<username>')
+@crossdomain(origin='*')
+def api_site_get_notes_user(name,username):
+	site = Site.query.filter_by(name=name).first()
+	account = Account.query.filter_by(username=username).first()
+	if site and account:
+		all_notes = []
+		for c in site.contexts:
+			notes = Note.query.filter_by(account_id=account.id, context_id=c.id).all()
+			all_notes += notes
+		return success([x.to_hash() for x in notes])
 	else:
 		return error("site does not exist")
 

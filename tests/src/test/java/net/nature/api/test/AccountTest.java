@@ -64,12 +64,14 @@ public class AccountTest {
 	 		param("email", email).
 	 		param("consent", "new consent text").
 	 		param("password", "1234").
+	 		param("icon_url", "http://host/icon.png").
 	 	when().
 	 		post("/account/new/" + newname).
 		then().
 			body("data.username", equalTo(newname)).
-			body("data.email", equalTo(email)).
-			body("data.consent", equalTo("new consent text"));			
+			body("data.email", equalTo(email)).			
+			body("data.consent", equalTo("new consent text")).
+			body("data.icon_url", equalTo("http://host/icon.png"));			
 	}
 
 	@Test

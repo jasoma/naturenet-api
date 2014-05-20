@@ -42,6 +42,7 @@ for i in range(2,2+n):
 	account.email = account_sheet.cell('D' + str(i)).value
 	account.password = account_sheet.cell('E' + str(i)).value
 	account.consent = account_sheet.cell('F' + str(i)).value
+	account.icon_url = account_sheet.cell('G' + str(i)).value
 
 	created_at += datetime.timedelta(days=1)
 	account.created_at = created_at

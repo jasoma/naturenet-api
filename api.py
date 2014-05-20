@@ -135,6 +135,7 @@ def api_account_new(username):
 				newAccount.consent = f['consent']
 				newAccount.password = f['password']
 				newAccount.created_at = datetime.now()
+				newAccount.icon_url = f.get('icon_url', newAccount.icon_url)
 				db.session.add(newAccount)
 				db.session.commit()
 				return success(newAccount.to_hash())		

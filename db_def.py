@@ -10,8 +10,8 @@ import datetime
 from time import strftime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
       
 
@@ -44,6 +44,7 @@ class Account(db.Model):
     email = db.Column(db.String(80))
     created_at = db.Column(db.DateTime())
     modified_at = db.Column(db.DateTime())
+    icon_url = db.Column(db.String(200))
 
     #notes = relationship("Note", order_by="Note.id", backref="account")
 
@@ -51,6 +52,7 @@ class Account(db.Model):
         self.username = username 
         self.created_at = datetime.datetime.now()
         self.modified_at = datetime.datetime.now()
+        self.icon_url = 'https://dl.dropboxusercontent.com/u/5104407/nntest/avatar.jpg'
 
     def __repr__(self):
         return '<Account username:%r>' % self.username
@@ -65,6 +67,7 @@ class Account(db.Model):
             'email' : self.email,
             'consent' : self.consent,
             'password' : self.password,
+            'icon_url' : self.icon_url,
             'modified_at' : self.modified_at,
             'created_at' : self.created_at}        
 

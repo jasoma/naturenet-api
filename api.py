@@ -450,14 +450,14 @@ def api_site_list_contexts(name):
 #
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>')
 def api_sync_account_since_minute(year,month,date,hour,minute):
-	since_date = datetime.datetime(int(year),int(month),int(date),int(hour),int(minute))
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	accounts = Account.query.filter(Account.created_at  >= since_date).all()
 	return success([x.to_hash() for x in accounts])
 
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>')
 def api_sync_notes_since_minute(year,month,date,hour,minute):
-	since_date = datetime.datetime(int(year),int(month),int(date),int(hour),int(minute))
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	notes = Note.query.filter(Note.created_at  >= since_date).all()
 	return success([x.to_hash() for x in notes])
 

@@ -177,13 +177,15 @@ def api_accounts_list():
 @crossdomain(origin='*')
 def api_note_get(id):
 	note = Note.query.get(id)
-	return success(note.to_hash())
+	return success(note.to_hash(format))
 
 @app.route('/api/notes')
 @crossdomain(origin='*')
-def api_note_list():
-	notes = Note.query.all()
-	return success([x.to_hash() for x in notes])
+def api_note_list():	
+	format = request.args.get('format', 'full')
+	n = request.args.get('n',50)	
+	notes = Note.query.limit(n)
+	return success([x.to_hash(format) for x in notes])
 
 @app.route('/api/note/<id>/feedbacks')
 @crossdomain(origin='*')
@@ -192,6 +194,24 @@ def api_note_get_feedbacks(id):
 	feedbacks = Feedback.query.filter_by(table_name='Note', row_id=id).all()
 	return success([x.to_hash() for x in feedbacks])
 
+@app.route('/api/note/<id>/update', methods = ['POST'])
+def api_note_update(id):
+	obj = request.form	
+	username = obj.get('username', '')
+	account = Account.query.filter_by(username=username).first()
+	note = Note.query.get(id)
+	if note and account:
+		note.content = obj.get('content', note.content)
+		note.kind = obj.get('kind', note.kind)
+		if 'context' in obj:
+			c = Context.query.filter_by(name=obj['context']).first()
+			if c == None:
+				return error("context %s does not exist" % obj['context'])			
+			note.context = c
+		note.modified_at = datetime.now()
+		db.session.commit()
+		return success(note.to_hash())
+	return error("some parameters are missing")
 
 @app.route('/api/note/new/<username>', methods = ['POST', 'GET'])
 def api_note_create(username):

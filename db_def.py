@@ -43,11 +43,14 @@ class Account(db.Model):
     password = db.Column(db.String(20))
     email = db.Column(db.String(80))
     created_at = db.Column(db.DateTime())
+    modified_at = db.Column(db.DateTime())
 
     #notes = relationship("Note", order_by="Note.id", backref="account")
 
     def __init__(self, username):    	
         self.username = username 
+        self.created_at = datetime.datetime.now()
+        self.modified_at = datetime.datetime.now()
 
     def __repr__(self):
         return '<Account username:%r>' % self.username
@@ -62,6 +65,7 @@ class Account(db.Model):
             'email' : self.email,
             'consent' : self.consent,
             'password' : self.password,
+            'modified_at' : self.modified_at,
             'created_at' : self.created_at}        
 
     def to_json(self):
@@ -97,6 +101,7 @@ class Note(db.Model):
     kind = db.Column(db.String(40), unique=False)
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime())
+    modified_at = db.Column(db.DateTime())    
 
     longitude = db.Column(db.Float())
     latitude = db.Column(db.Float())
@@ -117,14 +122,23 @@ class Note(db.Model):
     def __repr__(self):
         return '<Note kind:%r, content:%r>' % (self.kind, self.content)
 
-    def to_hash(self):
-        return {'id': self.id, 'kind': self.kind, 'content' : self.content, 
+    def to_hash(self, format = 'full'):
+        h = {'id': self.id, 
+            'kind': self.kind, 
+            'content' : self.content, 
             'created_at' : self.created_at,
+            'modified_at' : self.modified_at,
             'latitude' : self.latitude,
-            'longitude' : self.longitude,            
-            'medias' : [ x.to_hash() for x in self.medias],
-            'context' : self.context.to_hash(),
-            'account' : self.account.to_hash()}
+            'longitude' : self.longitude}
+        if format == 'full':
+            h['medias'] = [ x.to_hash() for x in self.medias];
+            h['context'] = self.context.to_hash();
+            h['account'] = self.account.to_hash();
+        else:
+            h['medias'] = [ x.id for x in self.medias];
+            h['context'] = self.context.id;
+            h['account'] = self.account.id;
+        return h
     
     def to_json(self):
         return json.dumps(self.to_hash())
@@ -156,7 +170,8 @@ class Media(db.Model):
         else:
             return "http://youtu.be/" + self.link
 
-    def to_hash(self):        
+    def to_hash(self, format = 'full'):        
+        #if format == 'full'
         return {'id' : self.id, 
         'kind': self.kind, 
         'created_at' : self.created_at,
@@ -174,6 +189,7 @@ class Feedback(db.Model):
     table_name = db.Column(db.String(20))
     row_id = db.Column(db.Integer)
     created_at = db.Column(db.DateTime())
+    modified_at = db.Column(db.DateTime())
 
     account = relationship("Account", backref=backref('feedbacks', order_by=id))
 
@@ -184,6 +200,7 @@ class Feedback(db.Model):
         self.kind = kind
         self.content = content
         self.created_at = datetime.datetime.now()
+        self.modified_at = datetime.datetime.now()
 
     def __repr__(self):
         return '<Feedback by %s: %s on %s: %s >' % (self.account, self.kind, self.table_name, self.content)

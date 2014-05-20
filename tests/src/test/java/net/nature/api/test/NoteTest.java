@@ -22,16 +22,14 @@ public class NoteTest {
 	public void  get_single_note() {
 		get("/note/1")
 		.then()
-			.body("data.kind", equalTo("FieldNote"))
-			.body("data.context.name", equalTo("ask"));
-
+			.body("data.kind", equalTo("FieldNote"));
 	}
 
 	@Test
 	public void  create_succeed() {
 		given().
 	 		param("content", "new note").
-	 		param("context", "Trees").
+	 		param("context", "cu_tree").
 	 		param("kind", "FieldNote").
 	 		param("latitude", -33.4304234).
 	 		param("longitude", 153.232431).
@@ -40,10 +38,35 @@ public class NoteTest {
 	 	then().
 	 		body("data.kind", equalTo("FieldNote")).
 	 		body("data.content", equalTo("new note")).
-	 		body("data.context.name", equalTo("Trees")).
+	 		body("data.context.name", equalTo("cu_tree")).
 	 		body("data.account.username", equalTo("tomyeh")).
 	 		body("data.latitude", equalTo(-33.4304234f)).
 			body("data.longitude", equalTo(153.232431f));
+	}
+	
+	@Test
+	public void  update_content_and_context() {
+		given().
+			param("username", "tomyeh").
+	 		param("content", "new note content").
+	 		param("context", "cu_building").
+	 	when().
+	 		post("/note/1/update").
+	 	then().
+	 		body("data.kind", equalTo("FieldNote")).
+	 		body("data.content", equalTo("new note content")).
+	 		body("data.context.name", equalTo("cu_building"));
+	}
+	
+	@Test
+	public void  error_update_bad_context() {
+		given().
+			param("username", "tomyeh").
+	 		param("context", "bad_bad_context").
+	 	when().
+	 		post("/note/1/update").
+	 	then().
+	 		statusCode(400);
 	}
 
 	@Test

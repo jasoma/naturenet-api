@@ -45,6 +45,7 @@ for i in range(2,2+n):
 
 	created_at += datetime.timedelta(days=1)
 	account.created_at = created_at
+	account.modified_at =  created_at
 	if id:
 		print "create account: %s" % account
 		db.session.add(account)
@@ -111,6 +112,7 @@ for i in range(2,2+n):
 		note.latitude = float(latitude) * det1
 		note.longitude = float(longitude) * det2		
 		note.created_at =  date
+		note.modified_at =  date
 		# created_at += datetime.timedelta(seconds=100)		
 		print "create note: %s" % note
 		db.session.add(note)

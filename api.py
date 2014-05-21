@@ -462,6 +462,13 @@ def api_sync_notes_since_minute(year,month,date,hour,minute):
 	notes = Note.query.filter(Note.created_at  >= since_date).all()
 	return success([x.to_hash() for x in notes])
 
+@app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>')
+def api_sync_feedback_since_minute(year,month,date,hour,minute):
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+	items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
+	return success([x.to_hash() for x in items])
+
+
 @app.route('/api/sync/accounts/created/recent/<n>')
 def api_sync_account_recent(n):	
 	accounts = Account.query.filter().order_by(Account.created_at.desc()).limit(n)

@@ -178,13 +178,13 @@ def api_accounts_list():
 @crossdomain(origin='*')
 def api_note_get(id):
 	note = Note.query.get(id)
-	return success(note.to_hash(format))
+	return success(note.to_hash())
 
 @app.route('/api/notes')
 @crossdomain(origin='*')
 def api_note_list():	
 	format = request.args.get('format', 'full')
-	n = request.args.get('n',50)	
+	n = request.args.get('n',50)
 	notes = Note.query.limit(n)
 	return success([x.to_hash(format) for x in notes])
 

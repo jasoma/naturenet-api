@@ -144,10 +144,14 @@ def api_account_new(username):
 	else:
 		return error("the request to add [%s] must be done through a post" % username)
 
-@app.route('/api/account/<username>')
+@app.route('/api/account/<query>')
 @crossdomain(origin='*')
-def api_account_get(username):
-	account = Account.query.filter_by(username=username).first()
+def api_account_get(query):
+	field = request.args.get("field","username")
+	if field == 'username':
+		account = Account.query.filter_by(username=query).first()
+	else:
+		account = Account.query.get(query)
 	if account:
 		return success(account.to_hash())
 	else:

@@ -184,6 +184,9 @@ class Media(db.Model):
     def to_json(self):
         return json.dumps(self.to_hash())
 
+
+
+
 class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     account_id = db.Column(db.Integer, ForeignKey('account.id'))
@@ -200,17 +203,42 @@ class Feedback(db.Model):
         self.account_id = account_id
         self.row_id = row_id
         self.table_name = table_name
-        self.kind = kind
+        self.kind = kind.lower()
         self.content = content
         self.created_at = datetime.datetime.now()
         self.modified_at = datetime.datetime.now()
 
+    @staticmethod
+    def resolve_target(table_name, row_id):
+        #if table_name in ['Note', 'Context', 'Account']:
+        if table_name.lower() == 'Note'.lower():
+            return Note.query.get(row_id)
+        elif table_name.lower() == 'Context'.lower():
+            return Context.query.get(row_id)
+        elif table_name.lower() == 'Account'.lower():
+            return Account.query.get(row_id)
+        elif table_name.lower() == 'Media'.lower():
+            return Media.query.get(row_id)      
+        else:
+            return None        
+
     def __repr__(self):
         return '<Feedback by %s: %s on %s: %s >' % (self.account, self.kind, self.table_name, self.content)
 
+    def resolve(self):
+        return Feedback.resolve_target(self.table_name, self.row_id)
+
     def to_hash(self):        
+        target = self.resolve()
+        if target:
+            target_hash = target.to_hash()
+        else:
+            target_hash = None
+
         return {'kind' : self.kind, 'content': self.content,
             'created_at' : self.created_at,
             'account': self.account.to_hash(),
-            'model': self.table_name}
+            'target': {'model': self.table_name,
+                       'id': self.row_id,
+                       'data': target_hash}};
 

@@ -46,26 +46,55 @@ public class FeedbackTest {
 		given().
 		 	param("content", "this is a new comment").
 		when().
-			post("/note/3/feedback/carol/new/comment")
+			post("/feedback/new/comment/for/note/3/by/carol")
 		.then()
-			.body("data.kind", equalTo("Comment"))
+			.body("data.kind", equalTo("comment"))
 			.body("data.account.username", equalTo("carol"))
-			.body("data.model", equalTo("Note"))
+			.body("data.target.model", equalTo("Note"))
+			.body("data.target.id", equalTo(3))
 			.body("data.content", equalTo("this is a new comment"));
 	}
 	
 	@Test
-	public void  create_feedback_comment_about_a_media_by_carol() {
+	public void  create_feedback_rating_about_a_media_by_carol() {
 		given().
-		 	param("content", "this is a new comment").
+		 	param("content", "5").
 		when().
-			post("/media/3/feedback/carol/new/comment")
+			post("/feedback/new/rating/for/media/3/by/carol")
 		.then()
-			.body("data.kind", equalTo("Comment"))
+			.body("data.kind", equalTo("rating"))
 			.body("data.account.username", equalTo("carol"))
-			.body("data.model", equalTo("Media"))
-			.body("data.content", equalTo("this is a new comment"));
+			.body("data.target.model", equalTo("Media"))
+			.body("data.target.id", equalTo(3))
+			.body("data.content", equalTo("5"));
 	}
+	
+	@Test
+	public void  create_feedback_like_about_a_context_by_mike() {
+		given().		 	
+		when().
+			post("/feedback/new/like/for/context/1/by/mike")
+		.then()
+			.body("data.kind", equalTo("like"))
+			.body("data.account.username", equalTo("mike"))
+			.body("data.target.model", equalTo("Context"))
+			.body("data.target.id", equalTo(1));
+	}
+	
+	@Test
+	public void  create_feedback_comment_about_a_user_by_tomyeh() {
+		given().		
+			param("content", "good insight from this person").
+		when().
+			post("/feedback/new/comment/for/account/2/by/tomyeh")
+		.then()
+			.body("data.kind", equalTo("comment"))
+			.body("data.account.username", equalTo("tomyeh"))
+			.body("data.target.model", equalTo("Account"))
+			.body("data.target.id", equalTo(2))
+			.body("data.content", equalTo("good insight from this person"));
+	}	
+	
 
 	@Test
 	public void  get_feedbacks_about_a_media() {

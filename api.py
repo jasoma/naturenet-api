@@ -188,7 +188,7 @@ def api_note_get(id):
 @crossdomain(origin='*')
 def api_note_list():	
 	format = request.args.get('format', 'full')
-	n = request.args.get('n',50)
+	n = request.args.get('n',1000)
 	notes = Note.query.limit(n)
 	return success([x.to_hash(format) for x in notes])
 
@@ -353,16 +353,29 @@ def api_feedback_get(id):
 	feedback = Feedback.query.get(id)
 	return success(feedback.to_hash())	
 
-@app.route('/api/note/<id>/feedback/<username>/new/comment',
+# def resolve_target(table_name, row_id):
+# 	#if table_name in ['Note', 'Context', 'Account']:
+# 	if table_name.lower() == 'Note'.lower():
+# 		return Note.query.get(row_id)
+# 	elif table_name.lower() == 'Context'.lower():
+# 		return Context.query.get(row_id)
+# 	elif table_name.lower() == 'Accont'.lower():
+# 		return Account.query.get(row_id)
+# 	elif table_name.lower() == 'Media'.lower():
+# 		return Media.query.get(row_id)		
+# 	else:
+# 		return None
+
+@app.route('/api/feedback/new/<kind>/for/<model>/<id>/by/<username>',
 	methods = ['POST', 'GET'])
-def api_feedback_add_to_note(id,username):
+def api_feedback_add_to_note(kind,model,id,username):
 	if request.method == 'POST':
-		note = Note.query.get(id)
 		account = Account.query.filter_by(username=username).first()
-		if note and account and 'content' in request.form:
-			kind = "Comment"
-			content = request.form['content']
-			table_name = "Note"
+		target = Feedback.resolve_target(model,id)
+		print "adding feedback [%s] about [%s]" % (kind, target)
+		if target and account:
+			content = request.form.get('content','')
+			table_name = target.__class__.__name__
 			row_id = id
 			feedback = Feedback(account.id, kind, content, table_name, row_id)
 			db.session.add(feedback)
@@ -459,6 +472,16 @@ def api_sync_account_since_minute(year,month,date,hour,minute):
 	accounts = Account.query.filter(Account.created_at  >= since_date).all()
 	return success([x.to_hash() for x in accounts])
 
+@app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+def api_sync_site_account_since_minute(site,year,month,date,hour,minute):	
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+	accounts = Account.query.filter(Account.created_at  >= since_date).all()
+	site = Site.query.filter_by(name=site).first()
+	site_accounts = []
+	for a in accounts:
+		if any(n.context.site.id == site.id for n in a.notes):
+			site_accounts.append(a)
+	return success([x.to_hash() for x in site_accounts])
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>')
 def api_sync_notes_since_minute(year,month,date,hour,minute):
@@ -466,12 +489,32 @@ def api_sync_notes_since_minute(year,month,date,hour,minute):
 	notes = Note.query.filter(Note.created_at  >= since_date).all()
 	return success([x.to_hash() for x in notes])
 
+@app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+def api_sync_site_notes_since_minute(year,month,date,hour,minute,site):
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+	notes = Note.query.filter(Note.created_at  >= since_date).all()
+	site = Site.query.filter_by(name=site).first()
+	context_ids = [c.id for c in site.contexts]
+	notes = [x for x in notes if x.context_id in context_ids]
+	return success([x.to_hash() for x in notes])
+
+@app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+	items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
+	site_items = []
+	for x in items:
+		if x.table_name == 'Note':
+			n = Note.query.get(x.row_id)
+			if n and n.context.site.name == site:				
+				site_items.append(x)
+	return success([x.to_hash() for x in site_items])
+
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>')
 def api_sync_feedback_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
 	return success([x.to_hash() for x in items])
-
 
 @app.route('/api/sync/accounts/created/recent/<n>')
 def api_sync_account_recent(n):	
@@ -482,8 +525,6 @@ def api_sync_account_recent(n):
 def api_sync_note_recent(n):	
 	notes = Note.query.filter().order_by(Note.created_at.desc()).limit(n)
 	return success([x.to_hash() for x in notes])
-
-
 
 if __name__ == '__main__':
     app.run(debug  = True, host='0.0.0.0')

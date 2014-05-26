@@ -421,6 +421,17 @@ def api_site_get(name):
 	else:
 		return error("site does not exist")
 
+@app.route('/api/site/<name>/long')
+@crossdomain(origin='*')
+def api_site_get_long(name):
+	site = Site.query.filter_by(name=name).first()	
+	if site:
+		h = site.to_hash()
+		h['contexts'] = [c.to_hash() for c in site.contexts]
+		return success(h)
+	else:
+		return error("site does not exist")
+
 
 @app.route('/api/site/<name>/notes')
 @crossdomain(origin='*')

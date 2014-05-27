@@ -18,6 +18,7 @@ db = SQLAlchemy(app)
 class Site(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
+    image_url = db.Column(db.String(200))
     description = db.Column(db.Text())
 
     def __init__(self, name, description):       
@@ -30,7 +31,8 @@ class Site(db.Model):
     def to_hash(self): 
         return {'id': self.id, 
             'name' : self.name,
-            'description' : self.description}
+            'description' : self.description,
+            'image_url' : self.image_url}
 
     def to_json(self):
         return json.dumps(self.to_hash())

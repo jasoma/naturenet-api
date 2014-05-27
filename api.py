@@ -432,7 +432,6 @@ def api_site_get_long(name):
 	else:
 		return error("site does not exist")
 
-
 @app.route('/api/site/<name>/notes')
 @crossdomain(origin='*')
 def api_site_get_notes(name):

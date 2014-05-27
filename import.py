@@ -25,8 +25,10 @@ n = site_sheet.cell('A1').value
 for i in range(2,2+n):
 	name = site_sheet.cell('B' + str(i)).value	
 	description  = site_sheet.cell('C' + str(i)).value
+	image_url  = site_sheet.cell('D' + str(i)).value
 
 	site = Site(name, description)
+	site.image_url = image_url
 	db.session.add(site)
 	print "create site: %s" % site		
 db.session.commit()		

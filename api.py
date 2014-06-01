@@ -353,6 +353,21 @@ def api_feedback_get(id):
 	feedback = Feedback.query.get(id)
 	return success(feedback.to_hash())	
 
+
+@app.route('/api/feedback/<id>/update', methods = ['POST'])
+def api_feedback_update(id):
+	obj = request.form
+	username = obj.get('username', '')
+	account = Account.query.filter_by(username=username).first()
+	feedback = Feedback.query.get(id)
+	if feedback and account:
+		feedback.content = obj.get('content', feedback.content)
+		feedback.kind = obj.get('kind', feedback.kind)
+		feedback.modified_at = datetime.now()
+		db.session.commit()
+		return success(feedback.to_hash())
+	return error("some parameters are missing")	
+
 # def resolve_target(table_name, row_id):
 # 	#if table_name in ['Note', 'Context', 'Account']:
 # 	if table_name.lower() == 'Note'.lower():

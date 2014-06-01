@@ -3,6 +3,8 @@ package net.nature.api.test;
 import static com.jayway.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
+import java.util.Date;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -103,4 +105,16 @@ public class FeedbackTest {
 		.body("data.kind", hasSize(3))
 		.body("data.kind", hasItems("Comment"));
 	}
+	
+	@Test
+	public void  update_feedback() {
+		String string = "some new feedback" + (new Date()).toString();
+		given().		
+			param("content", string).
+			param("username", "tomyeh").
+		when().
+			post("/feedback/1/update")
+		.then()
+			.body("data.content", equalTo(string));
+	}	
 }

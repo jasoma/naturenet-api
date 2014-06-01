@@ -83,6 +83,7 @@ class Context(db.Model):
     name = db.Column(db.String(40))
     title = db.Column(db.Text())
     description = db.Column(db.Text())    
+    extras = db.Column(db.Text())    
     site_id = db.Column(db.Integer, ForeignKey('site.id'))
 
     site = relationship("Site", backref=backref('contexts', order_by=id))
@@ -92,13 +93,15 @@ class Context(db.Model):
         self.name = name
         self.title = title
         self.description = description
+        self.extras = ""
 
     def __repr__(self):
         return '<Context kind:%r, name:%r>' % (self.kind, self.name)
 
     def to_hash(self):
         return {'id': self.id, 'kind': self.kind, 'name' : self.name, 'title' : self.title,
-            'description' : self.description, 'site' : self.site.to_hash()}            
+            'description' : self.description, 'extras' : self.extras,
+            'site' : self.site.to_hash()}            
 
 
 class Note(db.Model):

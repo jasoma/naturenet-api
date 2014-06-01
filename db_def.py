@@ -240,7 +240,8 @@ class Feedback(db.Model):
         else:
             target_hash = None
 
-        return {'kind' : self.kind, 'content': self.content,
+        return {'id' : self.id,
+            'kind' : self.kind, 'content': self.content,
             'created_at' : self.created_at,
             'account': self.account.to_hash(),
             'target': {'model': self.table_name,

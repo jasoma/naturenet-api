@@ -13,7 +13,7 @@ from db_def import Site
 db.drop_all()
 db.create_all()
 
-deployment = True
+deployment = False
 
 
 wb = load_workbook(filename = r'data.xlsx')

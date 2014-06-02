@@ -211,7 +211,7 @@ class Feedback(db.Model):
         self.account_id = account_id
         self.row_id = row_id
         self.table_name = table_name
-        self.kind = kind.lower()
+        self.kind = kind
         self.content = content
         self.created_at = datetime.datetime.now()
         self.modified_at = datetime.datetime.now()

@@ -182,10 +182,7 @@ def api_accounts_list():
 @crossdomain(origin='*')
 def api_note_get(id):
 	note = Note.query.get(id)
-	feedbacks = Feedback.query.filter_by(table_name='Note', row_id=id).all()
-	h = note.to_hash()
-	h['feedbacks'] = [f.to_hash('short') for f in feedbacks]
-	return success(h)
+	return success(note.to_hash())
 
 @app.route('/api/notes')
 @crossdomain(origin='*')

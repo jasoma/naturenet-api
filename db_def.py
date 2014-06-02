@@ -142,6 +142,9 @@ class Note(db.Model):
             h['medias'] = [ x.to_hash() for x in self.medias];
             h['context'] = self.context.to_hash();
             h['account'] = self.account.to_hash();
+            feedbacks = Feedback.query.filter_by(table_name='Note', row_id=self.id).all()            
+            h['feedbacks'] = [f.to_hash('short') for f in feedbacks]
+            # h['feedbacks'] = [f.content for f in feedbacks]
         else:
             h['medias'] = [ x.id for x in self.medias];
             h['context'] = self.context.id;
@@ -234,13 +237,13 @@ class Feedback(db.Model):
         return Feedback.resolve_target(self.table_name, self.row_id)
 
     def to_hash(self, format = 'full'):        
-        target = self.resolve()
-        if target:
-            target_hash = target.to_hash()
-        else:
-            target_hash = None
 
         if format == 'full':
+            target = self.resolve()
+            if target:
+                target_hash = target.to_hash()
+            else:
+                target_hash = None
             return {'id' : self.id,
                 'kind' : self.kind, 'content': self.content,
                 'created_at' : self.created_at,

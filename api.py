@@ -182,7 +182,10 @@ def api_accounts_list():
 @crossdomain(origin='*')
 def api_note_get(id):
 	note = Note.query.get(id)
-	return success(note.to_hash())
+	feedbacks = Feedback.query.filter_by(table_name='Note', row_id=id).all()
+	h = note.to_hash()
+	h['feedbacks'] = [f.to_hash('short') for f in feedbacks]
+	return success(h)
 
 @app.route('/api/notes')
 @crossdomain(origin='*')
@@ -346,6 +349,12 @@ def api_context_get_all_landmarks():
 #
 # Feedback
 #
+
+@app.route('/api/feedbacks')
+@crossdomain(origin='*')
+def api_feedbacks_list_all():
+	feedbacks = Feedback.query.all()
+	return success([x.to_hash() for x in feedbacks])
 
 @app.route('/api/feedback/<id>')
 @crossdomain(origin='*')

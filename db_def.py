@@ -233,18 +233,26 @@ class Feedback(db.Model):
     def resolve(self):
         return Feedback.resolve_target(self.table_name, self.row_id)
 
-    def to_hash(self):        
+    def to_hash(self, format = 'full'):        
         target = self.resolve()
         if target:
             target_hash = target.to_hash()
         else:
             target_hash = None
 
-        return {'id' : self.id,
-            'kind' : self.kind, 'content': self.content,
-            'created_at' : self.created_at,
-            'account': self.account.to_hash(),
-            'target': {'model': self.table_name,
-                       'id': self.row_id,
-                       'data': target_hash}};
+        if format == 'full':
+            return {'id' : self.id,
+                'kind' : self.kind, 'content': self.content,
+                'created_at' : self.created_at,
+                'modified_at' : self.modified_at,
+                'account': self.account.to_hash(),
+                'target': {'model': self.table_name,
+                           'id': self.row_id,
+                           'data': target_hash}};
+        elif format == 'short':
+            return {'id' : self.id,
+                'kind' : self.kind, 'content': self.content,
+                'created_at' : self.created_at,
+                'modified_at' : self.modified_at,
+                'account': self.account.to_hash()};
 

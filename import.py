@@ -13,7 +13,7 @@ from db_def import Site
 db.drop_all()
 db.create_all()
 
-deployment = False
+deployment = True
 
 
 wb = load_workbook(filename = r'data.xlsx')
@@ -57,7 +57,7 @@ if not deployment:
 			db.session.add(account)
 	db.session.commit()
 else:
-	account = Account("default_user")
+	account = Account("default")
 	created_at += datetime.timedelta(days=1)
 	account.created_at = created_at
 	account.modified_at =  created_at
@@ -72,12 +72,17 @@ for i in range(2,2+n):
 	title = context_sheet.cell('D' + str(i)).value
 	description = context_sheet.cell('E' + str(i)).value
 	site = context_sheet.cell('F' + str(i)).value
-	extras = context_sheet.cell('G' + str(i)).value
+	# extras = context_sheet.cell('G' + str(i)).value
 	context = Context(kind, name, title, description)
-	context.extras = extras
+	# context.extras = extras
 	
 	site = Site.query.filter_by(name=site).first()
 	context.site_id = site.id
+
+	if kind == 'Landmark':
+		lat = context_sheet.cell('G' + str(i)).value
+		lgn = context_sheet.cell('H' + str(i)).value
+		context.extras = str({"latitude": float(lat), "longitude": float(lgn)})
 
 	if id:
 		print "create context: %s" % context

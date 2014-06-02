@@ -374,19 +374,6 @@ def api_feedback_update(id):
 		return success(feedback.to_hash())
 	return error("some parameters are missing")	
 
-# def resolve_target(table_name, row_id):
-# 	#if table_name in ['Note', 'Context', 'Account']:
-# 	if table_name.lower() == 'Note'.lower():
-# 		return Note.query.get(row_id)
-# 	elif table_name.lower() == 'Context'.lower():
-# 		return Context.query.get(row_id)
-# 	elif table_name.lower() == 'Accont'.lower():
-# 		return Account.query.get(row_id)
-# 	elif table_name.lower() == 'Media'.lower():
-# 		return Media.query.get(row_id)		
-# 	else:
-# 		return None
-
 @app.route('/api/feedback/new/<kind>/for/<model>/<id>/by/<username>',
 	methods = ['POST', 'GET'])
 def api_feedback_add_to_note(kind,model,id,username):
@@ -538,6 +525,10 @@ def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
 		if x.table_name == 'Note':
 			n = Note.query.get(x.row_id)
 			if n and n.context.site.name == site:				
+				site_items.append(x)
+		elif x.table_name == 'Context':
+			c = Context.query.get(x.row_id)
+			if c and c.site.name == site:				
 				site_items.append(x)
 	return success([x.to_hash() for x in site_items])
 

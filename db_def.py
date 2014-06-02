@@ -10,8 +10,8 @@ import datetime
 from time import strftime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
       
 
@@ -29,7 +29,9 @@ class Site(db.Model):
         return '<Site name:%r>' % self.name
 
     def to_hash(self): 
-        return {'id': self.id, 
+        return {
+            '_model_' : 'Site',
+            'id': self.id, 
             'name' : self.name,
             'description' : self.description,
             'image_url' : self.image_url}
@@ -63,7 +65,9 @@ class Account(db.Model):
         return {'id': self.id, 'username': self.username}
 
     def to_hash(self): 
-        return {'id': self.id, 
+        return {
+            '_model_' : 'Account',
+            'id': self.id, 
             'username': self.username,
             'name' : self.name,
             'email' : self.email,
@@ -98,8 +102,10 @@ class Context(db.Model):
     def __repr__(self):
         return '<Context kind:%r, name:%r>' % (self.kind, self.name)
 
-    def to_hash(self):
-        return {'id': self.id, 'kind': self.kind, 'name' : self.name, 'title' : self.title,
+    def to_hash(self, format = 'full'):
+        return {
+            '_model_' : 'Context',
+            'id': self.id, 'kind': self.kind, 'name' : self.name, 'title' : self.title,
             'description' : self.description, 'extras' : self.extras,
             'site' : self.site.to_hash()}            
 
@@ -131,7 +137,9 @@ class Note(db.Model):
         return '<Note kind:%r, content:%r>' % (self.kind, self.content)
 
     def to_hash(self, format = 'full'):
-        h = {'id': self.id, 
+        h = {
+            '_model_' : 'Note',
+            'id': self.id, 
             'kind': self.kind, 
             'content' : self.content, 
             'created_at' : self.created_at,
@@ -146,7 +154,7 @@ class Note(db.Model):
             h['feedbacks'] = [f.to_hash('short') for f in feedbacks]
             # h['feedbacks'] = [f.content for f in feedbacks]
         else:
-            h['medias'] = [ x.id for x in self.medias];
+            # h['medias'] = [ x.id for x in self.medias];
             h['context'] = self.context.id;
             h['account'] = self.account.id;
         return h
@@ -183,7 +191,9 @@ class Media(db.Model):
 
     def to_hash(self, format = 'full'):        
         #if format == 'full'
-        return {'id' : self.id, 
+        return {
+        '_model_' : 'Media',
+        'id' : self.id, 
         'kind': self.kind, 
         'created_at' : self.created_at,
         'title' : self.title, 
@@ -236,26 +246,32 @@ class Feedback(db.Model):
     def resolve(self):
         return Feedback.resolve_target(self.table_name, self.row_id)
 
-    def to_hash(self, format = 'full'):        
-
+    def to_hash(self, format = 'full'):     
+        h = {'id' : self.id,
+                'kind' : self.kind, 'content': self.content,
+                'created_at' : self.created_at,
+                'modified_at' : self.modified_at,
+                'account': self.account.to_hash()}
         if format == 'full':
             target = self.resolve()
             if target:
-                target_hash = target.to_hash()
+                target_hash = target.to_hash('short')
             else:
                 target_hash = None
-            return {'id' : self.id,
-                'kind' : self.kind, 'content': self.content,
-                'created_at' : self.created_at,
-                'modified_at' : self.modified_at,
-                'account': self.account.to_hash(),
-                'target': {'model': self.table_name,
+            h['target'] = {'model': self.table_name,
                            'id': self.row_id,
-                           'data': target_hash}};
-        elif format == 'short':
-            return {'id' : self.id,
-                'kind' : self.kind, 'content': self.content,
-                'created_at' : self.created_at,
-                'modified_at' : self.modified_at,
-                'account': self.account.to_hash()};
+                           'data': target_hash}
+        return h
+
+        #     return {'id' : self.id,
+        #         'kind' : self.kind, 'content': self.content,
+        #         'created_at' : self.created_at,
+        #         'modified_at' : self.modified_at,
+        #         'account':};
+        # elif format == 'short':
+        #     return {'id' : self.id,
+        #         'kind' : self.kind, 'content': self.content,
+        #         'created_at' : self.created_at,
+        #         'modified_at' : self.modified_at,
+        #         'account': self.account.to_hash()};
 

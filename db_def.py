@@ -10,7 +10,8 @@ import datetime
 from time import strftime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://dlwyhanthjnoya:540fV4ZvZGagixmE42WtVkAa8v@ec2-54-243-249-246.compute-1.amazonaws.com:5432/dfgrborutosjtg'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
 db = SQLAlchemy(app)
       

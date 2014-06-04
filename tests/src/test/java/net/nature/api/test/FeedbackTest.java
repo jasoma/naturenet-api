@@ -73,7 +73,7 @@ public class FeedbackTest {
 	
 	@Test
 	public void  create_feedback_like_about_a_context_by_mike() {
-		given().		 	
+		given().	
 		when().
 			post("/feedback/new/like/for/context/1/by/mike")
 		.then()
@@ -82,6 +82,19 @@ public class FeedbackTest {
 			.body("data.target.model", equalTo("Context"))
 			.body("data.target.id", equalTo(1));
 	}
+	
+	@Test
+	public void  create_feedback_like_about_a_note_by_tomyeh() {
+		given().		
+			param("content", "true").
+		when().
+			post("/feedback/new/like/for/note/1/by/tomyeh")
+		.then()
+			.body("data.kind", equalTo("like"))
+			.body("data.account.username", equalTo("tomyeh"))
+			.body("data.target.model", equalTo("Note"))
+			.body("data.target.id", equalTo(1));
+	}	
 	
 	@Test
 	public void  create_feedback_comment_about_a_user_by_tomyeh() {

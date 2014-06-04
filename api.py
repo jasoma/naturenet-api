@@ -111,7 +111,7 @@ def error(msg):
 
 @app.route('/api')
 def api():
-	return "ok"
+	return render_template('apis.html')
 
 #
 # Account
@@ -387,7 +387,7 @@ def api_feedback_add_to_note(kind,model,id,username):
 			row_id = id
 			feedback = Feedback(account.id, kind, content, table_name, row_id)
 			db.session.add(feedback)
-			db.session.commit()	
+			db.session.commit()				
 			return success(feedback.to_hash())	
 		return error("something wrong")
 	else:
@@ -488,7 +488,7 @@ def api_site_list_contexts(name):
 def api_sync_account_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	accounts = Account.query.filter(Account.created_at  >= since_date).all()
-	return success([x.to_hash() for x in accounts])
+	return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
 def api_sync_site_account_since_minute(site,year,month,date,hour,minute):	
@@ -499,13 +499,13 @@ def api_sync_site_account_since_minute(site,year,month,date,hour,minute):
 	for a in accounts:
 		if any(n.context.site.id == site.id for n in a.notes):
 			site_accounts.append(a)
-	return success([x.to_hash() for x in site_accounts])
+	return sync_success([x.to_hash() for x in site_accounts])
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>')
 def api_sync_notes_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	notes = Note.query.filter(Note.created_at  >= since_date).all()
-	return success([x.to_hash() for x in notes])
+	return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
 def api_sync_site_notes_since_minute(year,month,date,hour,minute,site):
@@ -514,7 +514,7 @@ def api_sync_site_notes_since_minute(year,month,date,hour,minute,site):
 	site = Site.query.filter_by(name=site).first()
 	context_ids = [c.id for c in site.contexts]
 	notes = [x for x in notes if x.context_id in context_ids]
-	return success([x.to_hash() for x in notes])
+	return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
 def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
@@ -530,23 +530,38 @@ def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
 			c = Context.query.get(x.row_id)
 			if c and c.site.name == site:				
 				site_items.append(x)
-	return success([x.to_hash() for x in site_items])
+	return sync_success([x.to_hash() for x in site_items])
 
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>')
 def api_sync_feedback_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
-	return success([x.to_hash() for x in items])
+	return sync_success(add_timestamp_txt([x.to_hash() for x in items]))
 
 @app.route('/api/sync/accounts/created/recent/<n>')
 def api_sync_account_recent(n):	
 	accounts = Account.query.filter().order_by(Account.created_at.desc()).limit(n)
-	return success([x.to_hash() for x in accounts])
+	return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/notes/created/recent/<n>')
 def api_sync_note_recent(n):	
 	notes = Note.query.filter().order_by(Note.created_at.desc()).limit(n)
-	return success([x.to_hash() for x in notes])
+	return sync_success([x.to_hash() for x in notes])
+
+@app.route('/api/sync/feedbacks/created/recent/<n>')
+def api_sync_feedback_recent(n):	
+	feedbacks = Feedback.query.filter().order_by(Feedback.created_at.desc()).limit(n)
+	return sync_success([x.to_hash() for x in feedbacks])
+
+def sync_success(x):
+	return success(add_timestamp_txt(x))
+
+def add_timestamp_txt(items):
+	for item in items:
+		ts = item['created_at']
+		item['created_at_debug'] = ts.strftime('%Y/%m/%d/%H/%M')
+	return items
+
 
 if __name__ == '__main__':
     app.run(debug  = True, host='0.0.0.0')

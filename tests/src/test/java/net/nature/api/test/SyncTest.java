@@ -63,6 +63,13 @@ public class SyncTest {
 		body("data.id", hasSize(5));		
 	}
 
+	@Test
+	public void  get_notes_created_later() {
+		get("/sync/notes/created/recent/5").
+		then().
+		body("data.id", everyItem(greaterThan(20))).
+		body("data.id", hasSize(5));		
+	}
 
 	
 }

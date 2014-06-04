@@ -116,8 +116,8 @@ if not deployment:
 
 		if not created_at:
 			created_at = 1396325280
-			det1 = 1.0 + float(randint(1,100) - 50)/1000000
-			det2 = 1.0 + float(randint(1,100) - 50)/1000000				
+			det1 = 1.0 + float(randint(1,100) - 50)/5000000
+			det2 = 1.0 + float(randint(1,100) - 50)/5000000				
 		else:
 			created_at = int(created_at)
 			det1 = 1.0

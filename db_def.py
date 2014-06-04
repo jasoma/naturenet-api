@@ -28,7 +28,7 @@ class Site(db.Model):
     def __repr__(self):
         return '<Site name:%r>' % self.name
 
-    def to_hash(self): 
+    def to_hash(self, format = 'full'): 
         return {
             '_model_' : 'Site',
             'id': self.id, 
@@ -54,8 +54,8 @@ class Account(db.Model):
 
     def __init__(self, username):    	
         self.username = username 
-        self.created_at = datetime.datetime.now()
-        self.modified_at = datetime.datetime.now()
+        self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
         self.icon_url = 'https://dl.dropboxusercontent.com/u/5104407/nntest/avatar.jpg'
 
     def __repr__(self):
@@ -64,7 +64,7 @@ class Account(db.Model):
     def to_hash_short(self):
         return {'id': self.id, 'username': self.username}
 
-    def to_hash(self): 
+    def to_hash(self, format = 'full'): 
         return {
             '_model_' : 'Account',
             'id': self.id, 
@@ -131,7 +131,8 @@ class Note(db.Model):
         self.context_id = context_id
         self.kind = kind
         self.content = content
-        self.created_at = datetime.datetime.now()
+        self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
 
     def __repr__(self):
         return '<Note kind:%r, content:%r>' % (self.kind, self.content)
@@ -178,7 +179,7 @@ class Media(db.Model):
         self.kind = kind
         self.title = title
         self.link = link
-        self.created_at = datetime.datetime.now()
+        self.created_at = datetime.datetime.utcnow()
 
     def __repr__(self):
         return '<Media title:%r>' % self.title
@@ -223,8 +224,8 @@ class Feedback(db.Model):
         self.table_name = table_name
         self.kind = kind
         self.content = content
-        self.created_at = datetime.datetime.now()
-        self.modified_at = datetime.datetime.now()
+        self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
 
     @staticmethod
     def resolve_target(table_name, row_id):
@@ -247,11 +248,13 @@ class Feedback(db.Model):
         return Feedback.resolve_target(self.table_name, self.row_id)
 
     def to_hash(self, format = 'full'):     
-        h = {'id' : self.id,
-                'kind' : self.kind, 'content': self.content,
-                'created_at' : self.created_at,
-                'modified_at' : self.modified_at,
-                'account': self.account.to_hash()}
+        h = {
+            '_model_' : 'Feedback',
+            'id' : self.id,
+            'kind' : self.kind, 'content': self.content,
+            'created_at' : self.created_at,
+            'modified_at' : self.modified_at,
+            'account': self.account.to_hash()}
         if format == 'full':
             target = self.resolve()
             if target:

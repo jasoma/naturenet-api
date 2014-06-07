@@ -77,7 +77,7 @@ class Account(db.Model):
             'name' : self.name,
             'email' : self.email,
             'consent' : self.consent,
-            'password' : self.password.strip(),
+            'password' : (self.password or '').strip(),
             'icon_url' : self.icon_url,
             'modified_at' : self.modified_at,
             'created_at' : self.created_at}        

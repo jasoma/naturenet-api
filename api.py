@@ -184,6 +184,19 @@ def api_note_get(id):
 	note = Note.query.get(id)
 	return success(note.to_hash())
 
+@app.route('/api/note/<id>/delete', methods = ['GET'])
+@crossdomain(origin='*')
+def api_note_delete(id):
+	# id = request.form.get('id','')
+	note = Note.query.get(id)
+	if note:
+		print "deleting %s " % note.to_hash()
+		db.session.delete(note)
+		db.session.commit()
+		return success({})
+	else:
+		return error("note does not exist")
+
 @app.route('/api/notes')
 @crossdomain(origin='*')
 def api_note_list():	

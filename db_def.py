@@ -185,9 +185,11 @@ class Note(db.Model):
         h = ("id: " + str(self.id) + "\r\n" +
             "username: " + self.account.username + "\r\n" +
             "status: " + self.status + "\r\n" +
-            "site: " + self.context.site.name + "\r\n" +
-            "created at: " + str(self.created_at) + "\r\n" +
-            "modified at: " + str(self.modified_at) + "\r\n")
+            "site: " + self.context.site.name + "\r\n")
+        if self.created_at:
+            h = h + "created at: " + str(self.created_at) + "\r\n"
+        if self.modified_at:
+            h = h + "modified at: " + str(self.modified_at) + "\r\n"
         return h
 
     def to_json(self):

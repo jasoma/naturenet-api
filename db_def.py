@@ -182,10 +182,13 @@ class Note(db.Model):
         #     'site':self.context.site.name,
         #     'user':self.account.name}
         # return str(h)
-        h = ("id: " + str(self.id) + "\r\n" +
-            "username: " + self.account.username + "\r\n" +
-            "status: " + self.status + "\r\n" +
-            "site: " + self.context.site.name + "\r\n")
+        h = "id: " + str(self.id) + "\r\n"
+        if self.account.username:
+            h = h + "username: " + self.account.username + "\r\n"
+        if self.status:
+            h = h + "status: " + self.status + "\r\n"
+        if self.content.site.name:
+            h = h + "site: " + self.context.site.name + "\r\n"
         if self.created_at:
             h = h + "created at: " + str(self.created_at) + "\r\n"
         if self.modified_at:

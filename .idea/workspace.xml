@@ -38,8 +38,8 @@
       <file leaf-file-name="db_def.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/db_def.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.944206" vertical-offset="2265" max-vertical-offset="5460">
-              <caret line="192" column="16" selection-start-line="192" selection-start-column="16" selection-end-line="192" selection-end-column="16" />
+            <state vertical-scroll-proportion="0.75107294" vertical-offset="2370" max-vertical-offset="5505">
+              <caret line="190" column="62" selection-start-line="190" selection-start-column="62" selection-end-line="190" selection-end-column="62" />
               <folding>
                 <element signature="e#0#33#0" expanded="true" />
               </folding>
@@ -253,8 +253,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/db_def.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.944206" vertical-offset="2265" max-vertical-offset="5460">
-          <caret line="192" column="16" selection-start-line="192" selection-start-column="16" selection-end-line="192" selection-end-column="16" />
+        <state vertical-scroll-proportion="0.75107294" vertical-offset="2370" max-vertical-offset="5505">
+          <caret line="190" column="62" selection-start-line="190" selection-start-column="62" selection-end-line="190" selection-end-column="62" />
           <folding>
             <element signature="e#0#33#0" expanded="true" />
           </folding>

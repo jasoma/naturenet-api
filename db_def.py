@@ -10,10 +10,14 @@ import datetime
 from time import strftime
 
 app = Flask(__name__)
-# old
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
-# production
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://dlwyhanthjnoya:540fV4ZvZGagixmE42WtVkAa8v@ec2-54-243-249-246.compute-1.amazonaws.com:5432/dfgrborutosjtg'
+# naturenet
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+# naturenet-dev
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://ypndcubhbvduxq:iYXNwxj3-ZTjOPumFcbBnlJmyW@ec2-54-225-101-164.compute-1.amazonaws.com:5432/d4gld0csl5044k'
+# ACES
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://dlwyhanthjnoya:540fV4ZvZGagixmE42WtVkAa8v@ec2-54-243-249-246.compute-1.amazonaws.com:5432/dfgrborutosjtg'
+# local db
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:lab308@localhost:5432/naturenet-dev'
 
 # local
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
@@ -54,14 +58,15 @@ class Account(db.Model):
     created_at = db.Column(db.DateTime())
     modified_at = db.Column(db.DateTime())
     icon_url = db.Column(db.String(200))
-
+    affiliation = db.Column(db.String(64))
     #notes = relationship("Note", order_by="Note.id", backref="account")
 
-    def __init__(self, username):    	
-        self.username = username 
+    def __init__(self, username):
+        self.username = username
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
         self.icon_url = 'https://dl.dropboxusercontent.com/u/5104407/nntest/avatar.jpg'
+        self.affiliation = ''
 
     def __repr__(self):
         return '<Account username:%r>' % self.username
@@ -80,7 +85,8 @@ class Account(db.Model):
             'password' : (self.password or '').strip(),
             'icon_url' : self.icon_url,
             'modified_at' : self.modified_at,
-            'created_at' : self.created_at}        
+            'created_at' : self.created_at,
+            'affiliation': self.affiliation}
 
     def to_json(self):
     	return jsonify(self.to_hash())
@@ -121,7 +127,7 @@ class Note(db.Model):
     content = db.Column(db.Text())
     created_at = db.Column(db.DateTime())
     modified_at = db.Column(db.DateTime())    
-
+    status = db.Column(db.String(64))
     longitude = db.Column(db.Float())
     latitude = db.Column(db.Float())
 
@@ -138,6 +144,7 @@ class Note(db.Model):
         self.content = content
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
+        self.status = ''
 
     def __repr__(self):
         return '<Note kind:%r, content:%r>' % (self.kind, self.content)
@@ -150,6 +157,7 @@ class Note(db.Model):
             'content' : self.content, 
             'created_at' : self.created_at,
             'modified_at' : self.modified_at,
+            'status' : self.status,
             'latitude' : self.latitude,
             'longitude' : self.longitude}
         if format == 'full':
@@ -164,7 +172,24 @@ class Note(db.Model):
             h['context'] = self.context.id;
             h['account'] = self.account.id;
         return h
-    
+
+    def to_trello_desc(self):
+        # h = {
+        #     'id': self.id,
+        #     'created_at' : self.created_at,
+        #     'modified_at' : self.modified_at,
+        #     'status' : self.status,
+        #     'site':self.context.site.name,
+        #     'user':self.account.name}
+        # return str(h)
+        h = ("id: " + str(self.id) + "\r\n" +
+            "username: " + self.account.username + "\r\n" +
+            "status: " + self.status + "\r\n" +
+            "site: " + self.context.site.name + "\r\n" +
+            "created at: " + str(self.created_at) + "\r\n" +
+            "modified at: " + str(self.modified_at) + "\r\n")
+        return h
+
     def to_json(self):
         return json.dumps(self.to_hash())
 
@@ -218,19 +243,22 @@ class Feedback(db.Model):
     content = db.Column(db.Text())
     table_name = db.Column(db.String(20))
     row_id = db.Column(db.Integer)
+    parent_id = db.Column(db.Integer)
     created_at = db.Column(db.DateTime())
     modified_at = db.Column(db.DateTime())
 
     account = relationship("Account", backref=backref('feedbacks', order_by=id))
 
-    def __init__(self, account_id, kind, content, table_name, row_id):
+    def __init__(self, account_id, kind, content, table_name, row_id, parent_id):
         self.account_id = account_id
         self.row_id = row_id
         self.table_name = table_name
+        self.parent_id = parent_id
         self.kind = kind
         self.content = content
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
+
 
     @staticmethod
     def resolve_target(table_name, row_id):
@@ -242,7 +270,7 @@ class Feedback(db.Model):
         elif table_name.lower() == 'Account'.lower():
             return Account.query.get(row_id)
         elif table_name.lower() == 'Media'.lower():
-            return Media.query.get(row_id)      
+            return Media.query.get(row_id)
         else:
             return None        
 
@@ -257,6 +285,7 @@ class Feedback(db.Model):
             '_model_' : 'Feedback',
             'id' : self.id,
             'kind' : self.kind, 'content': self.content,
+            'parent_id' : self.parent_id,
             'created_at' : self.created_at,
             'modified_at' : self.modified_at,
             'account': self.account.to_hash()}
@@ -283,3 +312,42 @@ class Feedback(db.Model):
         #         'modified_at' : self.modified_at,
         #         'account': self.account.to_hash()};
 
+class InteractionLog(db.Model):
+    id = db.Column(db.BigInteger, primary_key=True)
+    type = db.Column(db.Integer)
+    date = db.Column(db.String(32))
+    touch_id = db.Column(db.Integer)
+    touch_x = db.Column(db.Float())
+    touch_y = db.Column(db.Float())
+    details = db.Column(db.String(256))
+    created_at = db.Column(db.DateTime())
+    site_id = db.Column(db.Integer, ForeignKey('site.id'))
+
+    site = relationship("Site", backref=backref('interactions', order_by=id))
+
+    def __init__(self, type):
+        self.date = str(datetime.datetime.utcnow())
+        self.type = type
+        self.touch_id = -1
+        self.touch_x = -1
+        self.touch_y = -1
+        self.details = ""
+        self.created_at = datetime.datetime.utcnow()
+
+    def __repr__(self):
+        return '<InteractionLog type:%r>' % self.type
+
+    def to_hash(self, format = 'full'):
+        return {
+        '_model_' : 'InteractionLog',
+        'id' : self.id,
+        'type': self.type,
+        'date' : self.date,
+        'touch_id' : self.touch_id,
+        'touch_x' : self.touch_x,
+        'touch_y' : self.touch_y,
+        'details' : self.details,
+        'created_at' : self.created_at}
+
+    def to_json(self):
+        return json.dumps(self.to_hash())

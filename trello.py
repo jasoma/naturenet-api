@@ -665,6 +665,12 @@ class Card(object):
             http_method='PUT',
             post_args={'value': value, }, )
 
+    def add_attachment(self, url, desc):
+        self.client.fetch_json(
+            '/cards/' + self.id + '/attachments',
+            http_method='POST',
+            post_args={'url': url, 'name': desc, }, )
+
 
 class Member(object):
     """

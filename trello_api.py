@@ -4,6 +4,7 @@ from trello import Board
 from trello import List
 from trello import Card
 
+import re
 from requests_oauthlib import OAuth1
 
 # for MJ
@@ -27,6 +28,7 @@ BOARD_ID_LONG = '53cddcf33d1a03c9274efe19'
 
 TRELLO_CLIENT = 'NULL'
 DEFAULT_LIST = 'To Do'
+NEW_OBSERVATIONS_LIST = 'New Observations'
 
 def setup():
     create_client()
@@ -38,6 +40,16 @@ def create_client():
     #TRELLO_CLIENT.oath = OAuth1(client_key=KEY, client_secret=SECRET,
     #                            resource_owner_key=TOKEN, verifier=None)
     #TRELLO_CLIENT.oauth.set_verifier(None)
+
+
+def find_note_id_from_trello_card_desc(desc):
+    id = -1
+    if not desc:
+        return id
+    t = re.findall(r"id:\s*\d+", desc)
+    if len(t)>0:
+        id = t[0].split(':')[1].strip()
+    return id
 
 def check_init():
     global TRELLO_CLIENT
@@ -69,6 +81,14 @@ def get_cards():
     board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
     cards = board.all_cards()
     return cards
+
+def get_card_by_id(id):
+    cards = get_cards()
+    for c in cards:
+        cid = find_note_id_from_trello_card_desc(c.desc)
+        if int(cid) == id:
+            return c
+    return None
 
 def get_list(list_id):
     board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
@@ -122,6 +142,16 @@ def add_card(title, description, list_name, use_default_list=False):
         return c
     return None
 
+def add_card_with_attachment(title, description, list_name, url, use_default_list=False):
+    print "the card will have the attachment to url: ", url
+    print "title: ", title
+    c = add_card(title, description, list_name, use_default_list)
+    if not c:
+        return None
+    print "adding the attachment..."
+    c.add_attachment(url, "the attachment")
+    return c
+
 def move_card(title, list_name_to):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
@@ -142,21 +172,25 @@ def delete_card(title):
         c.delete()
     return
 
-def update_card(title, description):
+def update_card(id, title, description):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
+    c = get_card_by_id(id)
     print "updating card: title = %s, desc = %s" % (title, description)
-    c = check_card_existance(title)
     if c:
         c._set_remote_attribute('desc', description)
+        c._set_remote_attribute('name', title)
+    else:
+        print "card not found."
     return
 
-def add_comment_card(title, comment_text):
+def add_comment_card(id, title, comment_text):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
-    c = check_card_existance(title)
+    c = get_card_by_id(id)
+    print "adding comment to card: title = %s" % (title)
     if c:
         c.comment(comment_text)
     return
@@ -168,3 +202,4 @@ def comment_exists(card, text):
         if comment['data']['text'] == text:
             return True
     return False
+

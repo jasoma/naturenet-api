@@ -89,9 +89,9 @@ for i in ideas:
         if account:
            name = account.username
         if new_card:
-            trello_api.add_comment_card(new_card.name, "[" + name + "] " + comment.content)
+            trello_api.add_comment_card(i.id, new_card.name, "[" + name + "] " + comment.content)
         else:
             e = trello_api.comment_exists(card, comment.content)
             if not e:
-                trello_api.add_comment_card(card.name, "[" + name + "] " + comment.content)
+                trello_api.add_comment_card(i.id, card.name, "[" + name + "] " + comment.content)
 db.session.commit()

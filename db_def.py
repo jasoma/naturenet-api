@@ -189,6 +189,8 @@ class Note(db.Model):
             h = h + "status: " + self.status + "\r\n"
         if self.context.site.name:
             h = h + "site: " + self.context.site.name + "\r\n"
+        if self.context.name:
+            h = h + "context: " + self.context.name + "\r\n"
         if self.created_at:
             h = h + "created at: " + str(self.created_at) + "\r\n"
         if self.modified_at:

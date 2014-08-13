@@ -283,12 +283,12 @@ def api_note_update(id):
             note.context = c
         note.modified_at = datetime.now()
         db.session.commit()
-        if note.kind == 'DesignIdea':
-            feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='commnet').all()
-            feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-            new_desc = note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
-            trello_api.update_card(note.content, new_desc)
-            trello_api.move_card(note.content, note.status)
+        #if note.kind == 'DesignIdea':
+        feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='commnet').all()
+        feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+        new_desc = note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
+        trello_api.update_card(note.id, note.content, new_desc)
+        trello_api.move_card(note.content, note.status)
         return success(note.to_hash())
     return error("some parameters are missing")
 
@@ -356,34 +356,42 @@ def allowed_file(filename):
 
 @app.route('/api/note/<id>/new/photo', methods = ['POST','GET'])
 def api_media_create(id):
-	if request.method == 'POST':
-		print "files: %s" % request.files
-		print "form: %s" % request.form
-		link = request.form.get("link","")#["link"] or request.form["link"] or ""
-		title = request.form.get("title","")#files["title"] or request.form["title"] or ""
-		kind = "Photo"
-		note = Note.query.get(id)
-		print "note: %s" % note
-		if note:
-			media = Media(note.id, kind, title, link)
-			file = request.files.get("file",None)
-			print "file: %s" % file
-			if file and allowed_file(file.filename):
-				filename = secure_filename(file.filename)
-				#file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-				#print "saving locally to " + filename
-				response = cloudinary.uploader.upload(file, public_id = media.id)
-				print "uploading to cloudinary .."
-				if response:
-					print response['url']
-					media.link = response['url']
-			db.session.add(media)
-			db.session.commit()
-			return success(media.to_hash())
-		else:
-			return error("note id %d is invalid" % id);
-	else:
-		return error("adding a media object to note {%s}, this request must be a post." % id)
+    if request.method == 'POST':
+        link = request.form.get("link","")#["link"] or request.form["link"] or ""
+        title = request.form.get("title","")#files["title"] or request.form["title"] or ""
+        kind = "Photo"
+        note = Note.query.get(id)
+        if note:
+            media = Media(note.id, kind, title, link)
+            file = request.files.get("file",None)
+            if not file:
+                print "No file provided."
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                # #print "saving locally to " + filename
+                response = cloudinary.uploader.upload(file, public_id = media.id)
+                # print "uploading to cloudinary .."
+                if response:
+                    # print response['url']
+                    media.link = response['url']
+            db.session.add(media)
+            note.status = trello_api.NEW_OBSERVATIONS_LIST
+            db.session.commit()
+
+            print "Adding card to trello..."
+            print "Link: ", link
+            print "Url: ", media.get_url()
+            if len(note.content) == 0:
+                trello_api.add_card_with_attachment(link, note.to_trello_desc(), note.status, media.get_url())
+            else:
+                trello_api.add_card_with_attachment(note.content, note.to_trello_desc(), note.status, media.get_url())
+            return success(media.to_hash())
+        else:
+            return error("note id %d is invalid" % id)
+    else:
+        return error("adding a media object to note {%s}, this request must be a post." % id)
+
 #
 # Context
 #
@@ -510,16 +518,16 @@ def api_feedback_add_to_note(kind,model,id,username):
             db.session.add(feedback)
             db.session.commit()
             if model == 'note':
-                if target.kind == 'DesignIdea':
-                    feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
-                    feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-                    trello_api.update_card(target.content, target.to_trello_desc() + "\r\n#likes: " + \
-                                       str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
-                    if kind.lower() == 'comment':
-                        account_username = "Anonymous"
-                        if account.username != 'default':
-                            account_username = account.username
-                        trello_api.add_comment_card(target.content, "[" + account_username + "] " + content)
+                #if target.kind == 'DesignIdea':
+                feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
+                feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+                trello_api.update_card(target.id, target.content, target.to_trello_desc() + "\r\n#likes: " + \
+                                   str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
+                if kind.lower() == 'comment':
+                    account_username = "Anonymous"
+                    if account.username != 'default':
+                        account_username = account.username
+                    trello_api.add_comment_card(target.id, target.content, "[" + account_username + "] " + content)
             return success(feedback.to_hash())
         return error("something wrong")
     else:
@@ -760,92 +768,28 @@ def api_trello_sync(model_id):
             card_name = card_name[len(t_card[0]):].lstrip()
         if action['type'] == 'createCard':
             print "a card was created in trello"
-            list_name = action_data['list']['name']
-            c = Note.query.filter_by(content=card_name).first()
-            context_name = 'aces_design_idea'
-            context = Context.query.filter_by(name=context_name).first()
-            if not c and context:
-                note = Note(account_id_card, context.id, 'DesignIdea', card_name)
-                note.status = list_name
-                db.session.add(note)
-                db.session.commit()
-            else:
+            r = trello_card_created(action_data, card, account_id_card)
+            if not r:
                 print "card exists or context does not exists."
                 return error("card exists or context does not exists.")
         if action['type'] == 'updateCard':
             print "a card was updated on trello"
-            note_id = find_note_id_from_trello_card_desc(card.desc)
-            n = Note.query.filter_by(id=note_id).first()
-            if not n:
-                #c = Note.query.filter_by(content=card_name).first()
+            r = trello_card_updated(action_data, card, account_id_card)
+            if not r:
                 print "cannot find the card in notes."
                 return error("cannot find the card in notes.")
-            else:
-                if 'listAfter' in action_data:
-                    list_after = action_data['listAfter']
-                    print "the card was moved."
-                    n.status = list_after['name']
-                    n.modified_at = datetime.now()
-                    db.session.commit()
-                else:
-                    print "looking for update in name field."
-                    n.content = card_name
-                    n.account_id = account_id_card
-                    n.modified_at = datetime.now()
-                    db.session.commit()
         if action['type'] == 'commentCard':
             print "a comment was created on trello"
-            text = action_data['text']
-            account_id = 0
-            if re.match(r"\[\S+\].+",text):
-                t = re.findall(r"\[\S+\]", text)
-                account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
-                if account:
-                    account_id = account.id
-                text = text[len(t[0]):].lstrip()
-            note_id = find_note_id_from_trello_card_desc(card.desc)
-            n = Note.query.filter_by(id=note_id).first()
-            if not n:
-                print "comment target not found."
-                return error("comment target not found.")
-            else:
-                f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == text).first()
-                if not f:
-                    feedback = Feedback(account_id, 'comment', text, 'note', n.id, 0)
-                    db.session.add(feedback)
-                    db.session.commit()
-                else:
-                    print "the comment already exists."
-                    return error("the comment already exists.")
+            r = trello_comment_created(action_data, card)
+            if not r:
+                print "the comment already exists or the target not found."
+                return error("the comment already exists or the target not found.")
         if action['type'] == 'updateComment':
             print "a comment was updated on trello"
-            old_comment = action_data['old']['text']
-            if re.match(r"\[\S+\].+",old_comment):
-                t = re.findall(r"\[\S+\]", old_comment)
-                old_comment = old_comment[len(t[0]):].lstrip()
-            note_id = find_note_id_from_trello_card_desc(card.desc)
-            target = Note.query.filter_by(id=note_id).first()
-            if target:
-                f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == old_comment).first()
-                if f:
-                    new_comment = action_data['action']['text']
-                    new_comment_account_id = 0
-                    if re.match(r"\[\S+\].+",new_comment):
-                        t = re.findall(r"\[\S+\]", new_comment)
-                        account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
-                        if account:
-                            new_comment_account_id = account.id
-                        new_comment = new_comment[len(t[0]):].lstrip()
-                    f.content = new_comment
-                    f.account_id = new_comment_account_id
-                    f.modified_at = datetime.now()
-                    db.session.commit()
-                else:
-                    print "comment not found to update."
-                    return error("comment not found to update.")
-            else:
-                print "target for the comment not found."
-                return error("target for the comment not found.")
+            r = trello_comment_updated(action_data, card)
+            if not r:
+                print "comment not found to update or target for the comment not found."
+                return error("comment not found to update or target for the comment not found.")
         return success("thanks!")
     return error("the request must be head or post.")
 
@@ -874,6 +818,124 @@ def api_interaction_new(type, site):
         return error("Interaction type is not specified")
     else:
         return error("the request to add [%s] must be done through a post" % type)
+
+#
+# Notifications
+#
+@app.route('/api/notification/alive/at/<site>', methods=['GET'])
+def api_notification_alive(site):
+    the_site = Site.query.filter_by(name=site).first()
+    if not the_site:
+        return error("Site Not Found.")
+
+    log = InteractionLog.query.filter(InteractionLog.details.ilike("tabletop is alive"), InteractionLog.site_id == the_site.id).first()
+    if not log:
+        new_notification = InteractionLog(0)
+        new_notification.details = "tabletop is alive"
+        new_notification.site_id = the_site.id
+        db.session.add(new_notification)
+        print "a notification was created."
+    else:
+        log.created_at = datetime.now()
+        print "updating the previous notification."
+    db.session.commit()
+    return success("OK!")
+
+#
+# Events
+#
+def trello_card_created(action_data, the_card, account_id_card):
+    list_name = action_data['list']['name']
+    if the_card.desc:
+        note_id = find_note_id_from_trello_card_desc(the_card.desc)
+        n = Note.query.filter_by(id=note_id).first()
+        if n:
+            return False
+    context_name = 'aces_design_idea'
+    context = Context.query.filter_by(name=context_name).first()
+    if context:
+        note = Note(account_id_card, context.id, 'DesignIdea', the_card.name)
+        note.status = list_name
+        db.session.add(note)
+        db.session.commit()
+    else:
+        return False
+    return True
+
+def trello_card_updated(action_data, the_card, account_id_card):
+    note_id = find_note_id_from_trello_card_desc(the_card.desc)
+    n = Note.query.filter_by(id=note_id).first()
+    if not n:
+        return False
+    else:
+        if 'listAfter' in action_data:
+            list_after = action_data['listAfter']
+            print "the card was moved."
+            n.status = list_after['name']
+            n.modified_at = datetime.now()
+            db.session.commit()
+        else:
+            print "looking for update in name field."
+            n.content = the_card.name
+            n.account_id = account_id_card
+            n.modified_at = datetime.now()
+            db.session.commit()
+    return True
+
+def trello_comment_created(action_data, the_card):
+    text = action_data['text']
+    account_id = 0
+    if re.match(r"\[\S+\].+",text):
+        t = re.findall(r"\[\S+\]", text)
+        account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
+        if account:
+            account_id = account.id
+        text = text[len(t[0]):].lstrip()
+    note_id = find_note_id_from_trello_card_desc(the_card.desc)
+    n = Note.query.filter_by(id=note_id).first()
+    if not n:
+        return False
+    else:
+        f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == text).first()
+        if not f:
+            feedback = Feedback(account_id, 'comment', text, 'note', n.id, 0)
+            db.session.add(feedback)
+            db.session.commit()
+        else:
+            return False
+    return True
+
+def trello_comment_updated(action_data, the_card):
+    old_comment = action_data['old']['text']
+    if re.match(r"\[\S+\].+",old_comment):
+        t = re.findall(r"\[\S+\]", old_comment)
+        old_comment = old_comment[len(t[0]):].lstrip()
+    note_id = find_note_id_from_trello_card_desc(the_card.desc)
+    target = Note.query.filter_by(id=note_id).first()
+    if target:
+        f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == old_comment).first()
+        if f:
+            new_comment = action_data['action']['text']
+            new_comment_account_id = 0
+            if re.match(r"\[\S+\].+",new_comment):
+                t = re.findall(r"\[\S+\]", new_comment)
+                account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
+                if account:
+                    new_comment_account_id = account.id
+                new_comment = new_comment[len(t[0]):].lstrip()
+            f.content = new_comment
+            f.account_id = new_comment_account_id
+            f.modified_at = datetime.now()
+            db.session.commit()
+        else:
+            return False
+    else:
+        return False
+    return True
+
+#
+# Other functions
+#
 
 def sync_success(x):
 	return success(add_timestamp_txt(x))

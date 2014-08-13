@@ -379,13 +379,13 @@ def api_media_create(id):
             note.status = trello_api.NEW_OBSERVATIONS_LIST
             db.session.commit()
 
-            print "Adding card to trello..."
-            print "Link: ", link
-            print "Url: ", media.get_url()
-            if len(note.content) == 0:
-                trello_api.add_card_with_attachment(link, note.to_trello_desc(), note.status, media.get_url())
-            else:
-                trello_api.add_card_with_attachment(note.content, note.to_trello_desc(), note.status, media.get_url())
+            # print "Adding card to trello..."
+            # print "Link: ", link
+            # print "Url: ", media.get_url()
+            # if len(note.content) == 0:
+            #     trello_api.add_card_with_attachment(link, note.to_trello_desc(), note.status, media.get_url())
+            # else:
+            #     trello_api.add_card_with_attachment(note.content, note.to_trello_desc(), note.status, media.get_url())
             return success(media.to_hash())
         else:
             return error("note id %d is invalid" % id)

@@ -35,7 +35,7 @@ d = datetime(2014, 6, 6)
 medias = Media.query.filter(Media.created_at < d).all()
 n = 0
 print "# of medias", str(len(medias))
-exit(0)
+
 for media in medias:
     note = media.note
     if not note:
@@ -57,7 +57,10 @@ for media in medias:
     new_card = False
     if card:
         # update the card
-        trello_api.update_card(note.id, note.content, new_desc)
+        card_title = ""
+        if len(note.content) == 0:
+            card_title = "[no description]"
+        trello_api.update_card(note.id, card_title, new_desc)
     else:
         # create the card
         new_card = True
@@ -75,10 +78,12 @@ for media in medias:
         if account:
             name = account.username
         if new_card:
+            print "Adding comment to a new card."
             trello_api.add_comment_card(note.id, card.name, "[" + name + "] " + comment.content)
         else:
             e = trello_api.comment_exists(card, comment.content)
             if not e:
+                print "Adding comment to an existing card."
                 trello_api.add_comment_card(note.id, card.name, "[" + name + "] " + comment.content)
 
 print "Done. (" + str(n) + " cards were added to trello.)"

@@ -31,8 +31,9 @@ for context in contexts:
     context_ids.append(context.id)
 
 # medias = Media.query.all()
-d = datetime(2014, 6, 14)
-medias = Media.query.filter(Media.created_at < d).all()
+d1 = datetime(2014, 6, 13)
+d2 = datetime(2014, 6, 22)
+medias = Media.query.filter(Media.created_at > d1, Media.created_at < d2).all()
 n = 0
 print "# of medias", str(len(medias))
 

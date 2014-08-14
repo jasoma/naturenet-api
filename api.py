@@ -745,7 +745,7 @@ def api_sync_interactions_recent(n):
 #
 @app.route('/api/sync/trello/<model_id>', methods= ['HEAD', 'POST'])
 def api_trello_sync(model_id):
-    if model_id != trello_api.BOARD_ID_LONG:
+    if model_id != trello_api.BOARD_ID_LONG_IDEAS and model_id != trello_api.BOARD_ID_LONG_OBVS:
         print "wrong id."
         return error("wrong id.")
     if request.method == 'HEAD':

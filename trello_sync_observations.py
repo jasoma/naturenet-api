@@ -33,6 +33,8 @@ n = 0
 
 for media in medias:
     note = media.note
+    if not note.context:
+        continue
     if note.context.id not in context_ids:
         continue
     feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='comment').all()

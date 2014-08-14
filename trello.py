@@ -433,16 +433,21 @@ class List(object):
         json_obj = self.client.fetch_json('/lists/' + self.id + '/cards')
         return [Card.from_json(self, c) for c in json_obj]
 
-    def add_card(self, name, desc=None):
+    def add_card(self, name, desc=None, pos='top'):
         """Add a card to this list
 
         :name: name for the card
         :return: the card
         """
+        # json_obj = self.client.fetch_json(
+        #     '/lists/' + self.id + '/cards',
+        #     http_method='POST',
+        #     post_args={'name': name, 'idList': self.id, 'desc': desc, 'pos': pos}, )
+        # return Card.from_json(self, json_obj)
         json_obj = self.client.fetch_json(
-            '/lists/' + self.id + '/cards',
+            '/cards/',
             http_method='POST',
-            post_args={'name': name, 'idList': self.id, 'desc': desc}, )
+            post_args={'name': name, 'idList': self.id, 'desc': desc, 'pos': pos, 'urlSource': 'null'}, )
         return Card.from_json(self, json_obj)
 
     def fetch_actions(self, action_filter):

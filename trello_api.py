@@ -57,6 +57,11 @@ def check_init():
         return False
     return True
 
+def create_list_by_name(name):
+    board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
+    l = board.add_list(name)
+    return l
+
 def create_webhooks():
     global TRELLO_CLIENT
     if not check_init():
@@ -82,11 +87,27 @@ def get_cards():
     cards = board.all_cards()
     return cards
 
-def get_card_by_id(id):
+def find_card_by_its_id(card_id):
+    cards = get_cards()
+    for c in cards:
+        if c.id == card_id:
+            return c
+    return None
+
+def get_card_by_id(note_id):
     cards = get_cards()
     for c in cards:
         cid = find_note_id_from_trello_card_desc(c.desc)
-        if int(cid) == id:
+        if int(cid) == note_id:
+            return c
+    return None
+
+def get_card_by_id_in_list(note_id, list_id):
+    list = get_list(list_id)
+    cards = list.list_cards()
+    for c in cards:
+        cid = find_note_id_from_trello_card_desc(c.desc)
+        if int(cid) == note_id:
             return c
     return None
 
@@ -103,22 +124,7 @@ def get_list_id(list_name):
             return x.id
     return None
 
-def check_card_existance_in_list(title, list_id):
-    list = get_list(list_id)
-    cards = list.list_cards()
-    for c in cards:
-        if c.name == title:
-            return c
-    return None
-
-def check_card_existance(title):
-    cards = get_cards()
-    for c in cards:
-        if c.name == title:
-            return c
-    return None
-
-def add_card(title, description, list_name, use_default_list=False):
+def add_card(note_id, title, description, list_name, use_default_list=False, create_list=False):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
@@ -134,42 +140,66 @@ def add_card(title, description, list_name, use_default_list=False):
             list_id = get_list_id(DEFAULT_LIST)
             if not list_id:
                 return None
+        elif create_list:
+            l = create_list_by_name(list_name)
+            c = l.add_card(title, description)
+            return c
         else:
             return None
-    if not check_card_existance_in_list(title, list_id):
+    if not get_card_by_id_in_list(note_id, list_id):
         list = get_list(list_id)
         c = list.add_card(title, description)
         return c
     return None
 
-def add_card_with_attachment(title, description, list_name, url, use_default_list=False):
-    print "the card will have the attachment to url: ", url
-    print "title: ", title
-    c = add_card(title, description, list_name, use_default_list)
+def add_card_with_attachment(note_id, title, description, list_name, url, create_list=True):
+    c = add_card(note_id, title, description, list_name, create_list=create_list)
     if not c:
         return None
     print "adding the attachment..."
     c.add_attachment(url, "the attachment")
     return c
 
-def move_card(title, list_name_to):
+def move_card(note_id, list_name_to):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
     list_id_to = get_list_id(list_name_to)
-    c = check_card_existance(title)
+    c = get_card_by_id(note_id)
     if c:
         c.change_list(list_id_to)
         return c
     return None
 
-def delete_card(title):
+def delete_card(note_id):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
-    c = check_card_existance(title)
+    c = get_card_by_id(note_id)
     if c:
         c.delete()
+    return
+
+def delete_cards(list_name):
+    if not check_init():
+        print "Not initialized. Use setup function to initialize."
+        return
+    list_id = get_list_id(list_name)
+    if list_id:
+        list = get_list(list_id)
+        cards = list.list_cards()
+        for c in cards:
+            c.delete()
+    return
+
+def delete_all_cards():
+    if not check_init():
+        print "Not initialized. Use setup function to initialize."
+        return
+    cards = get_cards()
+    if cards:
+        for c in cards:
+            c.delete()
     return
 
 def update_card(id, title, description):
@@ -177,7 +207,7 @@ def update_card(id, title, description):
         print "Not initialized. Use setup function to initialize."
         return
     c = get_card_by_id(id)
-    print "updating card: title = %s, desc = %s" % (title, description)
+    print "updating card: title = %s" % (title)
     if c:
         c._set_remote_attribute('desc', description)
         c._set_remote_attribute('name', title)

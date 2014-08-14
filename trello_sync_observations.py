@@ -37,7 +37,13 @@ for media in medias:
         continue
     feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='comment').all()
     feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='like').all()
-    new_desc = note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))
+    feedback_landmark = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='Landmark').first()
+    location_text = ""
+    if note.kind == "FieldNote" and feedback_landmark:
+        location = Context.query.filter_by(name=feedback_landmark.content).first()
+        if location:
+            location_text = "location: " + location.title + "\r\n"
+    new_desc = location_text + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))
     card = trello_api.get_card_by_id(note.id)
     new_card = False
     if card:
@@ -47,12 +53,12 @@ for media in medias:
         # create the card
         new_card = True
         n = n + 1
-        note.status = trello_api.NEW_OBSERVATIONS_LIST
+        note.status = str(note.created_at.date())
         db.session.commit()
         if len(note.content) == 0:
-            card = trello_api.add_card_with_attachment(media.link, new_desc, trello_api.NEW_OBSERVATIONS_LIST, media.get_url())
+            card = trello_api.add_card_with_attachment(note.id, media.link, new_desc, note.status, media.get_url())
         else:
-            card = trello_api.add_card_with_attachment(note.content, new_desc, trello_api.NEW_OBSERVATIONS_LIST, media.get_url())
+            card = trello_api.add_card_with_attachment(note.id, note.content, new_desc, note.status, media.get_url())
     # updating comments
     for comment in feedbacks_comment:
         account = Account.query.filter_by(id=comment.account_id).first()

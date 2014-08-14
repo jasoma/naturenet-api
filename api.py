@@ -225,8 +225,6 @@ def api_accounts_list():
 # Note
 #
 trello_api.setup()
-# print "executing add card"
-# print trello_api.add_card_doing("api.py", "It used oauth1 -- test2")
 
 @app.route('/api/note/<id>')
 @crossdomain(origin='*')
@@ -240,7 +238,7 @@ def api_note_delete(id):
     note = Note.query.get(id)
     if note:
         print "deleting %s " % note.to_hash()
-        trello_api.delete_card(note.content)
+        trello_api.delete_card(note.id)
         db.session.delete(note)
         db.session.commit()
         return success({})
@@ -286,9 +284,12 @@ def api_note_update(id):
         #if note.kind == 'DesignIdea':
         feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='commnet').all()
         feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-        new_desc = note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
+        new_desc = find_location_for_note(note)
+        if len(new_desc) > 0:
+            new_desc = "location: " + new_desc + "\r\n"
+        new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
         trello_api.update_card(note.id, note.content, new_desc)
-        trello_api.move_card(note.content, note.status)
+        trello_api.move_card(note.id, note.status)
         return success(note.to_hash())
     return error("some parameters are missing")
 
@@ -313,8 +314,9 @@ def api_note_create(username):
                     note.status = ''
                 db.session.add(note)
                 db.session.commit()
-                if kind == 'DesignIdea':
-                    trello_api.add_card(content, note.to_trello_desc(), note.status)
+
+                if kind == 'DesignIdea' and is_note_in_aces(note):
+                    trello_api.add_card(note.id, content, note.to_trello_desc(), note.status)
                 return success(note.to_hash())
 		return error("some parameters are missing")
 	else:
@@ -376,16 +378,15 @@ def api_media_create(id):
                     # print response['url']
                     media.link = response['url']
             db.session.add(media)
-            note.status = trello_api.NEW_OBSERVATIONS_LIST
+            note.status = str(note.created_at.date())
             db.session.commit()
 
-            # print "Adding card to trello..."
-            # print "Link: ", link
-            # print "Url: ", media.get_url()
-            # if len(note.content) == 0:
-            #     trello_api.add_card_with_attachment(link, note.to_trello_desc(), note.status, media.get_url())
-            # else:
-            #     trello_api.add_card_with_attachment(note.content, note.to_trello_desc(), note.status, media.get_url())
+            if is_note_in_aces(note):
+                print "Adding card to trello... link: ", media.link
+                if len(note.content) == 0:
+                    trello_api.add_card_with_attachment(note.id, link, note.to_trello_desc(), note.status, media.get_url())
+                else:
+                    trello_api.add_card_with_attachment(note.id, note.content, note.to_trello_desc(), note.status, media.get_url())
             return success(media.to_hash())
         else:
             return error("note id %d is invalid" % id)
@@ -521,10 +522,13 @@ def api_feedback_add_to_note(kind,model,id,username):
                 #if target.kind == 'DesignIdea':
                 feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
                 feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-                trello_api.update_card(target.id, target.content, target.to_trello_desc() + "\r\n#likes: " + \
+                new_desc = find_location_for_note(target)
+                if len(new_desc) > 0:
+                    new_desc = "location: " + new_desc + "\r\n"
+                trello_api.update_card(target.id, target.content, new_desc + target.to_trello_desc() + "\r\n#likes: " + \
                                    str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
                 if kind.lower() == 'comment':
-                    account_username = "Anonymous"
+                    account_username = "The Design Team"
                     if account.username != 'default':
                         account_username = account.username
                     trello_api.add_comment_card(target.id, target.content, "[" + account_username + "] " + content)
@@ -754,8 +758,9 @@ def api_trello_sync(model_id):
         action = response['action']
         action_data = action['data']
         card_name = action_data['card']['name']
+        card_id = action_data['card']['id']
         print action['type']
-        card = trello_api.check_card_existance(card_name)
+        card = trello_api.find_card_by_its_id(card_id)
         if not card:
             print "card not found."
             return error("card not found.")
@@ -877,7 +882,7 @@ def trello_card_updated(action_data, the_card, account_id_card):
         else:
             print "looking for update in name field."
             n.content = the_card.name
-            n.account_id = account_id_card
+            # n.account_id = account_id_card
             n.modified_at = datetime.now()
             db.session.commit()
     return True
@@ -977,6 +982,26 @@ def find_note_id_from_trello_card_desc(desc):
     if len(t)>0:
         id = t[0].split(':')[1].strip()
     return id
+
+def find_location_for_note(note):
+    feedback_landmark = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='Landmark').first()
+    location_text = ""
+    if note.kind == "FieldNote" and feedback_landmark:
+        location = Context.query.filter_by(name=feedback_landmark.content).first()
+        if location:
+            location_text = location.title
+    return location_text
+
+def is_note_in_aces(note):
+    contexts = Context.query.filter(Context.name.ilike('aces%'), Context.kind.ilike("activity")).all()
+    if len(contexts) == 0:
+        return False
+    context_ids = []
+    for context in contexts:
+        context_ids.append(context.id)
+    if note.context.id not in context_ids:
+        return False
+    return True
 
 if __name__ == '__main__':
     app.run(debug  = True, host='0.0.0.0')

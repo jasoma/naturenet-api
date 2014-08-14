@@ -182,19 +182,21 @@ class Note(db.Model):
         #     'site':self.context.site.name,
         #     'user':self.account.name}
         # return str(h)
-        h = "id: " + str(self.id) + "\r\n"
+        h = ""
         if self.account.username:
             h = h + "username: " + self.account.username + "\r\n"
-        if self.status:
-            h = h + "status: " + self.status + "\r\n"
-        if self.context.site.name:
-            h = h + "site: " + self.context.site.name + "\r\n"
-        if self.context.name:
-            h = h + "context: " + self.context.name + "\r\n"
+        if self.context:
+            if self.context.site:
+                h = h + "site: " + self.context.site.name + "\r\n"
+            if self.context.title:
+                h = h + "context: " + self.context.title + "\r\n"
         if self.created_at:
             h = h + "created at: " + str(self.created_at) + "\r\n"
         if self.modified_at:
             h = h + "modified at: " + str(self.modified_at) + "\r\n"
+        if self.status:
+            h = h + "status: " + self.status + "\r\n"
+        h = h + "id: " + str(self.id) + "\r\n"
         return h
 
     def to_json(self):

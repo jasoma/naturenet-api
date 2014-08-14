@@ -48,8 +48,8 @@
       <file leaf-file-name="trello_sync_observations.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/trello_sync_observations.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.6415929" vertical-offset="495" max-vertical-offset="1455">
-              <caret line="60" column="63" selection-start-line="60" selection-start-column="63" selection-end-line="60" selection-end-column="63" />
+            <state vertical-scroll-proportion="0.6858407" vertical-offset="495" max-vertical-offset="1455">
+              <caret line="62" column="59" selection-start-line="62" selection-start-column="59" selection-end-line="62" selection-end-column="59" />
               <folding>
                 <element signature="e#1#18#0" expanded="true" />
               </folding>
@@ -418,8 +418,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/trello_sync_observations.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6415929" vertical-offset="495" max-vertical-offset="1455">
-          <caret line="60" column="63" selection-start-line="60" selection-start-column="63" selection-end-line="60" selection-end-column="63" />
+        <state vertical-scroll-proportion="0.6858407" vertical-offset="495" max-vertical-offset="1455">
+          <caret line="62" column="59" selection-start-line="62" selection-start-column="59" selection-end-line="62" selection-end-column="59" />
           <folding>
             <element signature="e#1#18#0" expanded="true" />
           </folding>

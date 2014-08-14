@@ -57,8 +57,8 @@ for media in medias:
     new_card = False
     if card:
         # update the card
-        card_title = ""
-        if len(note.content) == 0 or media.link == note.content:
+        card_title = note.content
+        if len(card_title) == 0 or media.link == card_title:
             card_title = "[no description]"
         trello_api.update_card(note.id, card_title, new_desc)
     else:

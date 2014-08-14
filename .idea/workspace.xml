@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="6dc1a6bc-0524-46a0-bf71-a50dfaac2380" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trello_sync_ideas.py" afterPath="$PROJECT_DIR$/trello_sync_ideas.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trello_sync_observations.py" afterPath="$PROJECT_DIR$/trello_sync_observations.py" />
     </list>
     <ignored path="naturenet.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -26,10 +25,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="api.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="api.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/api.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="2.1283185" vertical-offset="12582" max-vertical-offset="14880">
+            <state vertical-scroll-proportion="0.0" vertical-offset="12327" max-vertical-offset="14880">
               <caret line="957" column="35" selection-start-line="957" selection-start-column="35" selection-end-line="957" selection-end-column="35" />
               <folding />
             </state>
@@ -46,11 +45,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="trello_sync_ideas.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="trello_sync_ideas.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/trello_sync_ideas.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="732" max-vertical-offset="1515">
-              <caret line="90" column="31" selection-start-line="90" selection-start-column="16" selection-end-line="90" selection-end-column="31" />
+            <state vertical-scroll-proportion="1.2654867" vertical-offset="252" max-vertical-offset="1515">
+              <caret line="79" column="9" selection-start-line="79" selection-start-column="9" selection-end-line="79" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -82,8 +81,8 @@
         <option value="$PROJECT_DIR$/trello_api.py" />
         <option value="$PROJECT_DIR$/api.py" />
         <option value="$PROJECT_DIR$/db_def.py" />
-        <option value="$PROJECT_DIR$/trello_sync_ideas.py" />
         <option value="$PROJECT_DIR$/trello_sync_observations.py" />
+        <option value="$PROJECT_DIR$/trello_sync_ideas.py" />
       </list>
     </option>
   </component>
@@ -378,18 +377,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/trello_sync_ideas.py">
+    <entry file="file://$PROJECT_DIR$/api.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="837" max-vertical-offset="1515">
-          <caret line="90" column="31" selection-start-line="90" selection-start-column="16" selection-end-line="90" selection-end-column="31" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="12327" max-vertical-offset="14880">
+          <caret line="957" column="35" selection-start-line="957" selection-start-column="35" selection-end-line="957" selection-end-column="35" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/api.py">
+    <entry file="file://$PROJECT_DIR$/trello_sync_ideas.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.1283185" vertical-offset="12582" max-vertical-offset="14880">
-          <caret line="957" column="35" selection-start-line="957" selection-start-column="35" selection-end-line="957" selection-end-column="35" />
+        <state vertical-scroll-proportion="1.2654867" vertical-offset="252" max-vertical-offset="1515">
+          <caret line="79" column="9" selection-start-line="79" selection-start-column="9" selection-end-line="79" selection-end-column="9" />
           <folding />
         </state>
       </provider>

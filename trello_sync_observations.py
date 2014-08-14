@@ -9,6 +9,8 @@ from db_def import Site
 from db_def import Context
 from db_def import Account
 
+from datetime import datetime
+
 print "(Server -> Trello) syncing observations..."
 
 trello_api.setup()
@@ -28,9 +30,12 @@ for context in contexts:
     print "adding context: ", context.name
     context_ids.append(context.id)
 
-medias = Media.query.all()
+# medias = Media.query.all()
+d = datetime(2014, 6, 6)
+medias = Media.query.filter(Media.created_at < d).all()
 n = 0
-
+print "# of medias", str(len(medias))
+exit(0)
 for media in medias:
     note = media.note
     if not note:

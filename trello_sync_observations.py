@@ -62,9 +62,9 @@ for media in medias:
     # updating comments
     for comment in feedbacks_comment:
         account = Account.query.filter_by(id=comment.account_id).first()
-        name = 'The design team'
+        name = 'The Design Team'
         if account:
-           name = account.username
+            name = account.username
         if new_card:
             trello_api.add_comment_card(note.id, card.name, "[" + name + "] " + comment.content)
         else:

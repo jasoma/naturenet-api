@@ -21,44 +21,47 @@ context_name = 'aces_design_idea'
 context = Context.query.filter(Context.name.ilike(context_name)).first()
 
 # first pass (trello -> server)
-# print "FIRST PASS"
-# cards = trello_api.get_cards()
-# print "%s cards to sync." % len(cards)
-# for c in cards:
-#     note = Note.query.filter(Note.content.ilike(c.name), Note.kind.ilike('designidea'), Note.context_id==context.id).first()
-#     new_note = None
-#     c.fetch()
-#     if not note:
-#         n = Note(0, context.id, 'DesignIdea', c.name)
-#
-#         list_id = c.idList
-#         #print "list_id: %s" % list_id
-#         board = trello_api.Board(trello_api.TRELLO_CLIENT, trello_api.BOARD_ID_LONG)
-#         #print "board: %s" % board.name
-#         lists = board.all_lists()
-#         for x in lists:
-#             #print "found list: %s, %s" % (x.id, x.name)
-#             if x.id == list_id:
-#                 #print "found match, setting the status."
-#                 n.status = x.name
-#         #print "status: %s." % n.status
-#
-#         db.session.add(n)
-#         db.session.commit()
-#         new_note = n.id
-#     # update the comments of the card
-#     comments = c.comments;
-#     for comment in comments:
-#         if new_note:
-#             feedback = Feedback(0, 'comment', comment['data']['text'], 'note', new_note, 0)
-#             db.session.add(feedback)
-#             db.session.commit()
-#         else:
-#             f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='comment', Feedback.content==comment['data']['text'])
-#             if not f:
-#                 feedback = Feedback(0, 'comment', comment['data']['text'], 'note', note.id, 0)
-#                 db.session.add(feedback)
-#                 db.session.commit()
+print "FIRST PASS"
+cards = trello_api.get_cards()
+print "%s cards to sync." % len(cards)
+for c in cards:
+    note_id = trello_api.find_note_id_from_trello_card_desc(c.desc)
+    note = Note.query.get(note_id)
+    new_note = None
+    c.fetch()
+    if not note:
+        print "note not found."
+        # n = Note(0, context.id, 'DesignIdea', c.name)
+        #
+        # list_id = c.idList
+        # #print "list_id: %s" % list_id
+        # board = trello_api.Board(trello_api.TRELLO_CLIENT, trello_api.BOARD_ID_LONG)
+        # #print "board: %s" % board.name
+        # lists = board.all_lists()
+        # for x in lists:
+        #     #print "found list: %s, %s" % (x.id, x.name)
+        #     if x.id == list_id:
+        #         #print "found match, setting the status."
+        #         n.status = x.name
+        # #print "status: %s." % n.status
+        #
+        # db.session.add(n)
+        # db.session.commit()
+        # new_note = n.id
+    # update the comments of the card
+    comments = c.comments
+    for comment in comments:
+        if new_note:
+            print "skipping the card's comments."
+            # feedback = Feedback(0, 'comment', comment['data']['text'], 'note', new_note, 0)
+            # db.session.add(feedback)
+            # db.session.commit()
+        else:
+            f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='comment', Feedback.content==comment['data']['text'])
+            if not f:
+                feedback = Feedback(0, 'comment', comment['data']['text'], 'note', note.id, 0)
+                db.session.add(feedback)
+                db.session.commit()
 
 # second pass (server -> trello)
 print "SECOND PASS"
@@ -85,7 +88,7 @@ for i in ideas:
     # updating the comments
     for comment in feedbacks_comment:
         account = Account.query.filter_by(id=comment.account_id).first()
-        name = 'The design team'
+        name = 'The Design Team'
         if account:
            name = account.username
         if new_card:

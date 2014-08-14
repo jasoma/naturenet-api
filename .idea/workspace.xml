@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6dc1a6bc-0524-46a0-bf71-a50dfaac2380" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trello_api.py" afterPath="$PROJECT_DIR$/trello_api.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trello_delete_cards.py" afterPath="$PROJECT_DIR$/trello_delete_cards.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/trello_sync_observations.py" afterPath="$PROJECT_DIR$/trello_sync_observations.py" />
     </list>
     <ignored path="naturenet.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,10 +35,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="trello_api.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="trello_api.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/trello_api.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.75663716" vertical-offset="2892" max-vertical-offset="3645">
+            <state vertical-scroll-proportion="0.0" vertical-offset="1602" max-vertical-offset="3645">
               <caret line="233" column="31" selection-start-line="233" selection-start-column="31" selection-end-line="233" selection-end-column="31" />
               <folding />
             </state>
@@ -59,11 +57,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="trello_delete_cards.py" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="trello_delete_cards.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/trello_delete_cards.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="255">
-              <caret line="5" column="24" selection-start-line="5" selection-start-column="24" selection-end-line="5" selection-end-column="24" />
+            <state vertical-scroll-proportion="0.11061947" vertical-offset="0" max-vertical-offset="678">
+              <caret line="5" column="23" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
               <folding />
             </state>
           </provider>
@@ -106,8 +104,8 @@
         <option value="$PROJECT_DIR$/trello_sync_ideas.py" />
         <option value="$PROJECT_DIR$/api.py" />
         <option value="$PROJECT_DIR$/trello_sync_observations.py" />
-        <option value="$PROJECT_DIR$/trello_delete_cards.py" />
         <option value="$PROJECT_DIR$/trello_api.py" />
+        <option value="$PROJECT_DIR$/trello_delete_cards.py" />
       </list>
     </option>
   </component>
@@ -394,14 +392,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/trello_delete_cards.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="255">
-          <caret line="5" column="24" selection-start-line="5" selection-start-column="24" selection-end-line="5" selection-end-column="24" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/trello_sync_observations.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="267" max-vertical-offset="1305">
@@ -422,8 +412,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/trello_api.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.75663716" vertical-offset="2892" max-vertical-offset="3645">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1602" max-vertical-offset="3645">
           <caret line="233" column="31" selection-start-line="233" selection-start-column="31" selection-end-line="233" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/trello_delete_cards.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.11061947" vertical-offset="0" max-vertical-offset="678">
+          <caret line="5" column="23" selection-start-line="5" selection-start-column="23" selection-end-line="5" selection-end-column="23" />
           <folding />
         </state>
       </provider>

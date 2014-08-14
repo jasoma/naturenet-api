@@ -33,7 +33,7 @@ for context in contexts:
 # medias = Media.query.all()
 d1 = datetime(2014, 7, 3)
 # d2 = datetime(2014, 7, 4)
-medias = Media.query.filter(Media.created_at > d1).all()
+medias = Media.query.filter(Media.created_at.date() == d1).all()
 n = 0
 print "# of medias", str(len(medias))
 

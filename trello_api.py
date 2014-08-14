@@ -21,14 +21,16 @@ CALLBACK_URL_PREFIX = 'http://naturenet.herokuapp.com/api/sync/trello/'
 
 # naturenet design ideas
 # BOARD_ID = 'lm8zPjEG'
-BOARD_ID_LONG = '53cddcf33d1a03c9274efe19'
+BOARD_ID_LONG_IDEAS = '53cddcf33d1a03c9274efe19'
+# naturenet observations
+# BOARD_ID = 'zTZEJHCP'
+BOARD_ID_LONG_OBSV = '53eca60442d60cbc95778fe4'
 # naturenet-dev
 # BOARD_ID = 'WjghHtGP'
 # BOARD_ID_LONG = '53d884dd6f7cf5146ff15fbb'
 
 TRELLO_CLIENT = 'NULL'
 DEFAULT_LIST = 'To Do'
-NEW_OBSERVATIONS_LIST = 'New Observations'
 
 def setup():
     create_client()
@@ -58,7 +60,7 @@ def check_init():
     return True
 
 def create_list_by_name(name):
-    board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
+    board = Board(TRELLO_CLIENT, BOARD_ID_LONG_OBSV)
     l = board.add_list(name)
     return l
 
@@ -74,32 +76,64 @@ def create_webhooks():
     print "existing hooks deleted, now creating hook for board..."
     # creating hook for application
     #TRELLO_CLIENT.create_hook(CALLBACK_URL_PREFIX + KEY, KEY, "SYNC_APP", TOKEN)
-    # creating hook for dev board
-    TRELLO_CLIENT.create_hook(CALLBACK_URL_PREFIX + BOARD_ID_LONG, BOARD_ID_LONG, "SYNC_BOARD", TOKEN)
+    # creating hook for boards
+    TRELLO_CLIENT.create_hook(CALLBACK_URL_PREFIX + BOARD_ID_LONG_IDEAS, BOARD_ID_LONG_IDEAS, "SYNC_IDEAS_BOARD", TOKEN)
+    TRELLO_CLIENT.create_hook(CALLBACK_URL_PREFIX + BOARD_ID_LONG_OBSV, BOARD_ID_LONG_OBSV, "SYNC_OBSV_BOARD", TOKEN)
     print "re-creating hooks done."
 
 def create_webhook_card(card_id):
     TRELLO_CLIENT.create_hook(CALLBACK_URL_PREFIX + card_id, card_id, "SYNC_CARD_" + card_id, TOKEN)
     print "creating hook for card %s done." % card_id
 
-def get_cards():
-    board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
+def get_cards(board_id):
+    board = Board(TRELLO_CLIENT, board_id)
     cards = board.all_cards()
     return cards
 
 def find_card_by_its_id(card_id):
-    cards = get_cards()
+    cards = get_cards(BOARD_ID_LONG_IDEAS)
+    for c in cards:
+        if c.id == card_id:
+            return c
+    cards = get_cards(BOARD_ID_LONG_OBSV)
     for c in cards:
         if c.id == card_id:
             return c
     return None
 
 def get_card_by_id(note_id):
-    cards = get_cards()
+    cards = get_cards(BOARD_ID_LONG_IDEAS)
     for c in cards:
         cid = find_note_id_from_trello_card_desc(c.desc)
         if int(cid) == note_id:
             return c
+    cards = get_cards(BOARD_ID_LONG_OBSV)
+    for c in cards:
+        cid = find_note_id_from_trello_card_desc(c.desc)
+        if int(cid) == note_id:
+            return c
+    return None
+
+
+def get_list(list_id):
+    board = Board(TRELLO_CLIENT, BOARD_ID_LONG_IDEAS)
+    list = List(board, list_id)
+    if not list:
+        board = Board(TRELLO_CLIENT, BOARD_ID_LONG_OBSV)
+        list = List(board, list_id)
+    return list
+
+def get_list_id(list_name):
+    board = Board(TRELLO_CLIENT, BOARD_ID_LONG_IDEAS)
+    lists = board.all_lists()
+    for x in lists:
+        if x.name.lower() == list_name.lower():
+            return x.id
+    board = Board(TRELLO_CLIENT, BOARD_ID_LONG_OBSV)
+    lists = board.all_lists()
+    for x in lists:
+        if x.name.lower() == list_name.lower():
+            return x.id
     return None
 
 def get_card_by_id_in_list(note_id, list_id):
@@ -109,19 +143,6 @@ def get_card_by_id_in_list(note_id, list_id):
         cid = find_note_id_from_trello_card_desc(c.desc)
         if int(cid) == note_id:
             return c
-    return None
-
-def get_list(list_id):
-    board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
-    list = List(board, list_id)
-    return list
-
-def get_list_id(list_name):
-    board = Board(TRELLO_CLIENT, BOARD_ID_LONG)
-    lists = board.all_lists()
-    for x in lists:
-        if x.name.lower() == list_name.lower():
-            return x.id
     return None
 
 def add_card(note_id, title, description, list_name, use_default_list=False, create_list=False):
@@ -192,11 +213,35 @@ def delete_cards(list_name):
             c.delete()
     return
 
+def delete_all_cards_ideas():
+    if not check_init():
+        print "Not initialized. Use setup function to initialize."
+        return
+    cards = get_cards(BOARD_ID_LONG_IDEAS)
+    if cards:
+        for c in cards:
+            c.delete()
+    return
+
+def delete_all_cards_obsv():
+    if not check_init():
+        print "Not initialized. Use setup function to initialize."
+        return
+    cards = get_cards(BOARD_ID_LONG_OBSV)
+    if cards:
+        for c in cards:
+            c.delete()
+    return
+
 def delete_all_cards():
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
-    cards = get_cards()
+    cards = get_cards(BOARD_ID_LONG_IDEAS)
+    if cards:
+        for c in cards:
+            c.delete()
+    cards = get_cards(BOARD_ID_LONG_OBSV)
     if cards:
         for c in cards:
             c.delete()

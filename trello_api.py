@@ -202,15 +202,16 @@ def delete_all_cards():
             c.delete()
     return
 
-def update_card(id, title, description):
+def update_card(note_id, title, description):
     if not check_init():
         print "Not initialized. Use setup function to initialize."
         return
-    c = get_card_by_id(id)
+    c = get_card_by_id(note_id)
     print "updating card: title = %s" % (title)
     if c:
         c._set_remote_attribute('desc', description)
-        c._set_remote_attribute('name', title)
+        if len(title)>0:
+            c._set_remote_attribute('name', title)
     else:
         print "card not found."
     return

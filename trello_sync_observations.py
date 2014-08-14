@@ -33,6 +33,8 @@ n = 0
 
 for media in medias:
     note = media.note
+    if not note:
+        continue
     if not note.context:
         continue
     if note.context.id not in context_ids:

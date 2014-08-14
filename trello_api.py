@@ -230,7 +230,14 @@ def comment_exists(card, text):
     card.fetch()
     comments = card.comments
     for comment in comments:
-        if comment['data']['text'] == text:
+        the_comment = comment['data']['text']
+        if the_comment == text:
             return True
+        else:
+            if re.match(r"\[\S+\].+", the_comment):
+                t = re.findall(r"\[\S+\]", the_comment)
+                the_comment = the_comment[len(t[0]):].lstrip()
+                if the_comment == text:
+                    return True
     return False
 

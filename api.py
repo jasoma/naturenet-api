@@ -764,7 +764,7 @@ def api_trello_sync(model_id):
         if not card:
             print "card not found."
             return error("card not found.")
-        account_id_card = 0
+        account_id_card = 1
         if re.match(r"\[\S+\].+",card_name):
             t_card = re.findall(r"\[\S+\]", card_name)
             account_card = Account.query.filter(Account.username.ilike(t_card[0][1:-1])).first()
@@ -889,7 +889,7 @@ def trello_card_updated(action_data, the_card, account_id_card):
 
 def trello_comment_created(action_data, the_card):
     text = action_data['text']
-    account_id = 0
+    account_id = 1
     if re.match(r"\[\S+\].+",text):
         t = re.findall(r"\[\S+\]", text)
         account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
@@ -921,7 +921,7 @@ def trello_comment_updated(action_data, the_card):
         f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == old_comment).first()
         if f:
             new_comment = action_data['action']['text']
-            new_comment_account_id = 0
+            new_comment_account_id = 1
             if re.match(r"\[\S+\].+",new_comment):
                 t = re.findall(r"\[\S+\]", new_comment)
                 account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()

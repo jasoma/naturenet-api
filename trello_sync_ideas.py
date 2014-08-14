@@ -59,7 +59,7 @@ for c in cards:
         else:
             f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==note.id, Feedback.kind=='comment', Feedback.content==comment['data']['text']).first()
             if not f:
-                feedback = Feedback(0, 'comment', comment['data']['text'], 'note', note.id, 0)
+                feedback = Feedback(1, 'comment', comment['data']['text'], 'note', note.id, 0)
                 db.session.add(feedback)
                 db.session.commit()
 

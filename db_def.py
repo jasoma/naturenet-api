@@ -134,7 +134,8 @@ class WebAccount(db.Model):
             'modified_at' : self.modified_at,
             'created_at' : self.created_at,
             'affiliation': self.affiliation,
-            'web_id': self.web_id}
+            'web_id': self.web_id,
+            'account_id': self.account_id}
 
     def to_json(self):
     	return jsonify(self.to_hash())

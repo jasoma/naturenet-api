@@ -5,7 +5,7 @@ import trello_api
 
 trello_api.setup()
 
-listname = 'doing'
+listname = 'done'
 listid = trello_api.get_list_id(listname)
 trello_list = trello_api.get_list(listid)
 

@@ -1,7 +1,10 @@
 
 from db_def import db
 from db_def import WebAccount
+from db_def import Note
 import trello_api
+
+from datetime import datetime
 
 trello_api.setup()
 
@@ -14,6 +17,7 @@ cards = trello_list.list_cards()
 print "number of cards: ", str(len(cards))
 
 for card in cards:
+    card.fetch()
     card.fetch_actions()
     actions = card.actions
     for action in actions:
@@ -21,6 +25,13 @@ for card in cards:
             creator = action['memberCreator']
             account = WebAccount.query.filter_by(username=creator['username']).first()
             if account:
+                note_id = trello_api.find_note_id_from_trello_card_desc(card.desc)
+                note = Note.query.get(note_id)
+                note.web_username = account.username
+                note.trello_card_id = card.id
+                note.modified_at = datetime.now()
+                db.session.commit()
+                print "note_id: %s updated." % (note_id)
                 continue
             print "adding webuser: ", creator['username']
             newAccount = WebAccount(creator['username'])

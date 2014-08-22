@@ -309,6 +309,7 @@ def api_webaccount_relation(webusername, username):
     if account and webaccount:
         webaccount.account_id = account.id
         webaccount.modified_at = datetime.now()
+        db.session.commit()
         return success(webaccount.to_hash())
     return error("cannot find the account or webaccount.")
 

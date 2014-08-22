@@ -26,7 +26,7 @@ for card in cards:
             account = WebAccount.query.filter_by(username=creator['username']).first()
             if account:
                 if not card.desc:
-                    note = Note.query.filter_by(content=card.name)
+                    note = Note.query.filter_by(content=card.name).first()
                     new_desc = note.to_trello_desc() + "\r\n#likes: 0"
                     card._set_remote_attribute('desc', new_desc)
                 else:

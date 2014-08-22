@@ -8,7 +8,7 @@ from datetime import datetime
 
 trello_api.setup()
 
-listname = 'doing'
+listname = 'to do'
 listid = trello_api.get_list_id(listname)
 trello_list = trello_api.get_list(listid)
 

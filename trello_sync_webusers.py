@@ -25,8 +25,13 @@ for card in cards:
             creator = action['memberCreator']
             account = WebAccount.query.filter_by(username=creator['username']).first()
             if account:
-                note_id = trello_api.find_note_id_from_trello_card_desc(card.desc)
-                note = Note.query.get(note_id)
+                if not card.desc:
+                    note = Note.query.filter_by(content=card.name)
+                    new_desc = note.to_trello_desc() + "\r\n#likes: 0"
+                    card._set_remote_attribute('desc', new_desc)
+                else:
+                    note_id = trello_api.find_note_id_from_trello_card_desc(card.desc)
+                    note = Note.query.get(note_id)
                 note.web_username = account.username
                 note.trello_card_id = card.id
                 note.modified_at = datetime.now()

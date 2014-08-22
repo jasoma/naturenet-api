@@ -677,6 +677,7 @@ class Card(object):
             post_args={'url': url, 'name': desc, }, )
 
 
+
 class Member(object):
     """
     Class representing a Trello member.

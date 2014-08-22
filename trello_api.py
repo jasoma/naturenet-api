@@ -121,6 +121,7 @@ def get_list(list_id):
     if not list:
         board = Board(TRELLO_CLIENT, BOARD_ID_LONG_OBSV)
         list = List(board, list_id)
+    list.fetch()
     return list
 
 def get_list_id(list_name):
@@ -286,3 +287,7 @@ def comment_exists(card, text):
                     return True
     return False
 
+def get_archived_cards(board_id):
+    board = Board(TRELLO_CLIENT, board_id)
+    cards = board.closed_cards()
+    return cards

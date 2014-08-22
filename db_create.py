@@ -1,16 +1,16 @@
 from db_def import db
-from db_def import Account
-from db_def import Note
-from db_def import Media
-from db_def import Context
+# from db_def import Account
+# from db_def import Note
+# from db_def import Media
+# from db_def import Context
 
 db.drop_all()
 db.create_all()
 
-default = Account("default")
-default.id = 0
-db.session.add(default)
-db.session.commit()
+# default = Account("default")
+# default.id = 0
+# db.session.add(default)
+# db.session.commit()
 
 #db.session.add(Context("Activity", "Ask","Find a naturalist and ask a question"))
 #db.session.add(Context("Activity", "Find", "Take a picture of any insect you see today"))

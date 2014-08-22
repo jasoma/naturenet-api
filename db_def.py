@@ -91,6 +91,53 @@ class Account(db.Model):
     def to_json(self):
     	return jsonify(self.to_hash())
 
+class WebAccount(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True)
+    name = db.Column(db.String(80), unique=False)
+    consent = db.Column(db.Text())
+    password = db.Column(db.String(20))
+    email = db.Column(db.String(80))
+    created_at = db.Column(db.DateTime())
+    modified_at = db.Column(db.DateTime())
+    icon_url = db.Column(db.String(200))
+    affiliation = db.Column(db.String(64))
+    web_id = db.Column(db.String(80))
+    account_id = db.Column(db.Integer, ForeignKey('account.id'))
+
+    account = relationship("Account", backref=backref('webaccounts', order_by=id))
+
+    def __init__(self, username):
+        self.username = username
+        self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
+        self.icon_url = 'https://dl.dropboxusercontent.com/u/5104407/nntest/avatar.jpg'
+        self.affiliation = ''
+        self.web_id = ''
+
+    def __repr__(self):
+        return '<Account username:%r>' % self.username
+
+    def to_hash_short(self):
+        return {'id': self.id, 'username': self.username}
+
+    def to_hash(self, format = 'full'):
+        return {
+            '_model_' : 'Account',
+            'id': self.id,
+            'username': self.username,
+            'name' : self.name,
+            'email' : self.email,
+            'consent' : self.consent,
+            'password' : (self.password or '').strip(),
+            'icon_url' : self.icon_url,
+            'modified_at' : self.modified_at,
+            'created_at' : self.created_at,
+            'affiliation': self.affiliation,
+            'web_id': self.web_id}
+
+    def to_json(self):
+    	return jsonify(self.to_hash())
 
 class Context(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -130,7 +177,8 @@ class Note(db.Model):
     status = db.Column(db.String(64))
     longitude = db.Column(db.Float())
     latitude = db.Column(db.Float())
-
+    web_username = db.Column(db.String(80))
+    trello_card_id = db.Column(db.String(80))
     account_id = db.Column(db.Integer, ForeignKey('account.id'))
     context_id = db.Column(db.Integer, ForeignKey('context.id'))
 
@@ -145,6 +193,7 @@ class Note(db.Model):
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
         self.status = ''
+        self.web_username = ''
 
     def __repr__(self):
         return '<Note kind:%r, content:%r>' % (self.kind, self.content)
@@ -158,6 +207,7 @@ class Note(db.Model):
             'created_at' : self.created_at,
             'modified_at' : self.modified_at,
             'status' : self.status,
+            'webusername' : self.web_username,
             'latitude' : self.latitude,
             'longitude' : self.longitude}
         if format == 'full':
@@ -255,6 +305,7 @@ class Feedback(db.Model):
     parent_id = db.Column(db.Integer)
     created_at = db.Column(db.DateTime())
     modified_at = db.Column(db.DateTime())
+    web_username = db.Column(db.String(80))
 
     account = relationship("Account", backref=backref('feedbacks', order_by=id))
 
@@ -265,6 +316,7 @@ class Feedback(db.Model):
         self.parent_id = parent_id
         self.kind = kind
         self.content = content
+        self.web_username = ''
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -295,6 +347,7 @@ class Feedback(db.Model):
             'id' : self.id,
             'kind' : self.kind, 'content': self.content,
             'parent_id' : self.parent_id,
+            'webusername': self.web_username,
             'created_at' : self.created_at,
             'modified_at' : self.modified_at,
             'account': self.account.to_hash()}

@@ -14,6 +14,7 @@ from functools import update_wrapper
 from db_def import db
 from db_def import app
 from db_def import Account
+from db_def import WebAccount
 from db_def import Note
 from db_def import Context
 from db_def import Media
@@ -23,6 +24,7 @@ from db_def import InteractionLog
 
 import trello_api
 import re
+from sqlalchemy import or_
 
 from datetime import datetime
 from datetime import timedelta
@@ -222,6 +224,94 @@ def api_accounts_list():
 	return success([x.to_hash() for x in accounts])
 
 #
+# WebAccount
+#
+
+@app.route('/api/webaccounts/count')
+def api_webaccounts_count():
+	n = WebAccount.query.count()
+	return jsonify({'success' : True, 'data' : n})
+
+@app.route('/api/webaccounts')
+@crossdomain(origin='*')
+def api_webaccounts_list():
+	accounts = WebAccount.query.all()
+	return success([x.to_hash() for x in accounts])
+
+@app.route('/api/webaccount/update/<username>', methods = ['POST','GET'])
+def api_webaccount_update(username):
+    account = WebAccount.query.filter_by(username=username).first()
+    if not account:
+        return error("User: %s does not exists" % username)
+    if request.method == 'POST':
+        f = request.form
+        if 'email' in f:
+            account.email = f['email']
+        if 'icon_url' in f:
+            account.icon_url = f['icon_url']
+        if 'password' in f:
+            account.password = f['password']
+        if 'consent' in f:
+            account.consent = f['consent']
+        if 'affiliation' in f:
+            account.affiliation = f['affiliation']
+        account.modified_at = datetime.now()
+        db.session.commit()
+        return success(account.to_hash())
+    else:
+       return error("the request to update [%s] must be done through a post" % username)
+
+@app.route('/api/webaccount/new/<username>', methods = ['POST','GET'])
+def api_webaccount_new(username):
+    if request.method == 'POST':
+        f = request.form
+        if username and 'email' in f and 'name' in f and 'consent' in f and 'password' in f:
+            account = WebAccount.query.filter_by(username=username).first()
+            if not account:
+                newAccount = WebAccount(username)
+                newAccount.name = f['name']
+                newAccount.email = f['email']
+                newAccount.consent = f['consent']
+                newAccount.password = f['password']
+                newAccount.created_at = datetime.now()
+                if 'icon_url' in f:
+                    newAccount.icon_url = f['icon_url']
+                else:
+                    newAccount.icon_url = f.get('icon_url', newAccount.icon_url)
+                if 'affiliation' in f:
+                    newAccount.affiliation = f['affiliation']
+                else:
+                    newAccount.affiliation = ''
+                newAccount.account_id = get_default_user_id()
+                db.session.add(newAccount)
+                db.session.commit()
+                return success(newAccount.to_hash())
+            return error("Username %s is already taken" % username)
+        return error("Username is not specified")
+    else:
+        return error("the request to add [%s] must be done through a post" % username)
+
+@app.route('/api/webaccount/delete/<username>', methods = ['GET'])
+def api_webaccount_delete(username):
+	account = WebAccount.query.filter_by(username=username).first()
+	if account:
+		print "deleting %s " % account.to_hash()
+		db.session.delete(account)
+		db.session.commit()
+		return success({})
+	else:
+		return error("account does not exist")
+
+@app.route('/api/webaccount/<webusername>/relatesto/<username>', methods = ['GET'])
+def api_webaccount_relation(webusername, username):
+    account = Account.query.filter_by(username=username).first()
+    webaccount = WebAccount.query.filter_by(username=webusername).first()
+    if account and webaccount:
+        webaccount.account_id = account.id
+        return success(webaccount.to_hash())
+    return error("cannot find the account or webaccount.")
+
+#
 # Note
 #
 trello_api.setup()
@@ -239,7 +329,7 @@ def api_note_delete(id):
     if note:
         print "deleting %s " % note.to_hash()
         trello_api.delete_card(note.id)
-        db.session.delete(note)
+        note.status = "deleted"
         db.session.commit()
         return success({})
     else:
@@ -316,7 +406,13 @@ def api_note_create(username):
                 db.session.commit()
 
                 if kind == 'DesignIdea' and is_note_in_aces(note):
-                    trello_api.add_card(note.id, content, note.to_trello_desc(), note.status)
+                    print "adding a design idea card to trello."
+                    card = trello_api.add_card(note.id, content, note.to_trello_desc(), note.status)
+                    if card:
+                        note.trello_card_id = card.id
+                        db.session.commit()
+                    else:
+                        print "could not create design idea card in trello."
                 return success(note.to_hash())
 		return error("some parameters are missing")
 	else:
@@ -384,9 +480,12 @@ def api_media_create(id):
             if is_note_in_aces(note):
                 print "Adding card to trello... link: ", media.link
                 if len(note.content) == 0:
-                    trello_api.add_card_with_attachment(note.id, link, note.to_trello_desc(), note.status, media.get_url())
+                    card = trello_api.add_card_with_attachment(note.id, link, note.to_trello_desc(), note.status, media.get_url())
                 else:
-                    trello_api.add_card_with_attachment(note.id, note.content, note.to_trello_desc(), note.status, media.get_url())
+                    card = trello_api.add_card_with_attachment(note.id, note.content, note.to_trello_desc(), note.status, media.get_url())
+                if card:
+                    note.trello_card_id = card.id
+                    db.session.commit()
             return success(media.to_hash())
         else:
             return error("note id %d is invalid" % id)
@@ -531,7 +630,7 @@ def api_feedback_add_to_note(kind,model,id,username):
                     account_username = "The Design Team"
                     if account.username != 'default':
                         account_username = account.username
-                    trello_api.add_comment_card(target.id, target.content, "[" + account_username + "] " + content)
+                    trello_api.add_comment_card(target.id, target.content, content)
             return success(feedback.to_hash())
         return error("something wrong")
     else:
@@ -644,6 +743,12 @@ def api_sync_account_since_minute(year,month,date,hour,minute):
 	accounts = Account.query.filter(Account.created_at  >= since_date).all()
 	return sync_success([x.to_hash() for x in accounts])
 
+@app.route('/api/sync/webaccounts/created/since/<year>/<month>/<date>/<hour>/<minute>')
+def api_sync_webaccount_since_minute(year,month,date,hour,minute):
+	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+	accounts = WebAccount.query.filter(WebAccount.created_at  >= since_date).all()
+	return sync_success([x.to_hash() for x in accounts])
+
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
 def api_sync_site_account_since_minute(site,year,month,date,hour,minute):
     since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
@@ -754,38 +859,39 @@ def api_trello_sync(model_id):
     if request.method == 'POST':
         d = request.data
         print "trello post call."
+        app.config['DEBUG'] = True
         response = json.loads(d)
         action = response['action']
         action_data = action['data']
-        card_name = action_data['card']['name']
+        if 'card' not in action_data:
+            print "card not in action data: ", action_data
+            return success("cannot be handled.")
         card_id = action_data['card']['id']
         print action['type']
         card = trello_api.find_card_by_its_id(card_id)
         if not card:
             print "card not found."
             return error("card not found.")
-        account_id_card = 1
-        if re.match(r"\[\S+\].+",card_name):
-            t_card = re.findall(r"\[\S+\]", card_name)
-            account_card = Account.query.filter(Account.username.ilike(t_card[0][1:-1])).first()
-            if account_card:
-                account_id_card = account_card.id
-            card_name = card_name[len(t_card[0]):].lstrip()
+        account_id = get_default_user_id()
+        webuser = get_or_create_webaccount_from_trello_data(action)
+        webusername = webuser.username
+        print "webusername: ", webusername
+        card_name = card.name
         if action['type'] == 'createCard':
             print "a card was created in trello"
-            r = trello_card_created(action_data, card, account_id_card)
+            r = trello_card_created(action_data, card, account_id, webusername)
             if not r:
                 print "card exists or context does not exists."
                 return error("card exists or context does not exists.")
         if action['type'] == 'updateCard':
             print "a card was updated on trello"
-            r = trello_card_updated(action_data, card, account_id_card)
+            r = trello_card_updated(action_data, card)
             if not r:
                 print "cannot find the card in notes."
                 return error("cannot find the card in notes.")
         if action['type'] == 'commentCard':
             print "a comment was created on trello"
-            r = trello_comment_created(action_data, card)
+            r = trello_comment_created(action_data, card, account_id, webusername)
             if not r:
                 print "the comment already exists or the target not found."
                 return error("the comment already exists or the target not found.")
@@ -795,6 +901,12 @@ def api_trello_sync(model_id):
             if not r:
                 print "comment not found to update or target for the comment not found."
                 return error("comment not found to update or target for the comment not found.")
+        # if action['type'] == 'deleteCard':
+        #     print "a card was deleted from trello"
+        #     r = trello_card_deleted(action_data, card, account_id_card)
+        #     if not r:
+        #         print "cannot find the card in notes."
+        #         return error("cannot find the card in notes.")
         return success("thanks!")
     return error("the request must be head or post.")
 
@@ -849,7 +961,7 @@ def api_notification_alive(site):
 #
 # Events
 #
-def trello_card_created(action_data, the_card, account_id_card):
+def trello_card_created(action_data, the_card, account_id, webusername):
     list_name = action_data['list']['name']
     if the_card.desc:
         note_id = find_note_id_from_trello_card_desc(the_card.desc)
@@ -859,17 +971,21 @@ def trello_card_created(action_data, the_card, account_id_card):
     context_name = 'aces_design_idea'
     context = Context.query.filter_by(name=context_name).first()
     if context:
-        note = Note(account_id_card, context.id, 'DesignIdea', the_card.name)
+        note = Note(account_id, context.id, 'DesignIdea', the_card.name)
+        note.web_username = webusername
         note.status = list_name
         db.session.add(note)
         db.session.commit()
+        new_desc = note.to_trello_desc() + "\r\n#likes: 0"
+        the_card._set_remote_attribute('desc', new_desc)
     else:
         return False
     return True
 
-def trello_card_updated(action_data, the_card, account_id_card):
+def trello_card_updated(action_data, the_card):
     note_id = find_note_id_from_trello_card_desc(the_card.desc)
     n = Note.query.filter_by(id=note_id).first()
+    print "action data: ", action_data
     if not n:
         return False
     else:
@@ -880,22 +996,24 @@ def trello_card_updated(action_data, the_card, account_id_card):
             n.modified_at = datetime.now()
             db.session.commit()
         else:
-            print "looking for update in name field."
+            print "looking for update in the fields."
             n.content = the_card.name
-            # n.account_id = account_id_card
             n.modified_at = datetime.now()
+            if 'closed' in action_data['card']:
+                if action_data['card']['closed']:
+                    n.status = "deleted"
+                else:
+                    list_id = the_card.idList
+                    print "returned to list (id): ", list_id
+                    the_list = trello_api.get_list(list_id)
+                    list_name = the_list.name
+                    print "returned to list (name): ", list_name
+                    n.status = list_name
             db.session.commit()
     return True
 
-def trello_comment_created(action_data, the_card):
+def trello_comment_created(action_data, the_card, account_id, webusername):
     text = action_data['text']
-    account_id = 1
-    if re.match(r"\[\S+\].+",text):
-        t = re.findall(r"\[\S+\]", text)
-        account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
-        if account:
-            account_id = account.id
-        text = text[len(t[0]):].lstrip()
     note_id = find_note_id_from_trello_card_desc(the_card.desc)
     n = Note.query.filter_by(id=note_id).first()
     if not n:
@@ -904,6 +1022,7 @@ def trello_comment_created(action_data, the_card):
         f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == text).first()
         if not f:
             feedback = Feedback(account_id, 'comment', text, 'note', n.id, 0)
+            feedback.web_username = webusername
             db.session.add(feedback)
             db.session.commit()
         else:
@@ -912,24 +1031,18 @@ def trello_comment_created(action_data, the_card):
 
 def trello_comment_updated(action_data, the_card):
     old_comment = action_data['old']['text']
-    if re.match(r"\[\S+\].+",old_comment):
-        t = re.findall(r"\[\S+\]", old_comment)
-        old_comment = old_comment[len(t[0]):].lstrip()
     note_id = find_note_id_from_trello_card_desc(the_card.desc)
     target = Note.query.filter_by(id=note_id).first()
     if target:
         f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == old_comment).first()
+        if not f:
+            if re.match(r"\[\S+\].+", old_comment):
+                t = re.findall(r"\[\S+\]", old_comment)
+                old_comment = old_comment[len(t[0]):].lstrip()
+                f = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == note_id, Feedback.content == old_comment).first()
         if f:
             new_comment = action_data['action']['text']
-            new_comment_account_id = 1
-            if re.match(r"\[\S+\].+",new_comment):
-                t = re.findall(r"\[\S+\]", new_comment)
-                account = Account.query.filter(Account.username.ilike(t[0][1:-1])).first()
-                if account:
-                    new_comment_account_id = account.id
-                new_comment = new_comment[len(t[0]):].lstrip()
             f.content = new_comment
-            f.account_id = new_comment_account_id
             f.modified_at = datetime.now()
             db.session.commit()
         else:
@@ -950,6 +1063,20 @@ def add_timestamp_txt(items):
 		ts = item['created_at']
 		item['created_at_debug'] = ts.strftime('%Y/%m/%d/%H/%M')
 	return items
+
+def get_or_create_webaccount_from_trello_data(action):
+    if 'memberCreator' in action:
+        user_data = action['memberCreator']
+        account = WebAccount.query.filter_by(username=user_data['username']).first()
+        if account:
+            return account
+        newAccount = WebAccount(user_data['username'])
+        newAccount.name = user_data['fullName']
+        newAccount.web_id = user_data['id']
+        db.session.add(newAccount)
+        db.session.commit()
+        return newAccount
+    return get_default_user_id()
 
 def is_account_related_to_site(account, the_site, recursive):
     for f in account.feedbacks:
@@ -993,7 +1120,7 @@ def find_location_for_note(note):
     return location_text
 
 def is_note_in_aces(note):
-    contexts = Context.query.filter(Context.name.ilike('aces%'), Context.kind.ilike("activity")).all()
+    contexts = Context.query.filter(Context.name.ilike('aces%'), or_(Context.kind.ilike("activity"), Context.kind.ilike("design"))).all()
     if len(contexts) == 0:
         return False
     context_ids = []
@@ -1002,6 +1129,12 @@ def is_note_in_aces(note):
     if note.context.id not in context_ids:
         return False
     return True
+
+def get_default_user_id():
+    default_user = Account.query.filter(Account.username.ilike('default')).first()
+    if default_user:
+        return default_user.id
+    return 1
 
 if __name__ == '__main__':
     app.run(debug  = True, host='0.0.0.0')

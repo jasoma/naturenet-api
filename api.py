@@ -482,7 +482,7 @@ def api_media_create(id):
             if is_note_in_aces(note):
                 print "Adding card to trello... link: ", media.link
                 if len(note.content) == 0:
-                    card = trello_api.add_card_with_attachment(note.id, link, note.to_trello_desc(), note.status, media.get_url())
+                    card = trello_api.add_card_with_attachment(note.id, "[no description]", note.to_trello_desc(), note.status, media.get_url())
                 else:
                     card = trello_api.add_card_with_attachment(note.id, note.content, note.to_trello_desc(), note.status, media.get_url())
                 if card:

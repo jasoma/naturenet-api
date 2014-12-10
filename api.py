@@ -477,14 +477,21 @@ def api_media_create(id):
                     media.link = response['url']
             db.session.add(media)
             note.status = str(note.created_at.date())
+            note.modified_at = datetime.now()
             db.session.commit()
 
             if is_note_in_aces(note):
                 print "Adding card to trello... link: ", media.link
+                feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+                new_desc = find_location_for_note(note)
+                if len(new_desc) > 0:
+                    new_desc = "location: " + new_desc + "\r\n"
+                new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
+
                 if len(note.content) == 0:
-                    card = trello_api.add_card_with_attachment(note.id, "[no description]", note.to_trello_desc(), note.status, media.get_url())
+                    card = trello_api.add_card_with_attachment(note.id, "[no description]", new_desc, note.status, media.get_url())
                 else:
-                    card = trello_api.add_card_with_attachment(note.id, note.content, note.to_trello_desc(), note.status, media.get_url())
+                    card = trello_api.add_card_with_attachment(note.id, note.content, new_desc, note.status, media.get_url())
                 if card:
                     note.trello_card_id = card.id
                     db.session.commit()
@@ -533,15 +540,17 @@ def api_context_get_all_landmarks():
 
 @app.route('/api/context/<id>/update', methods = ['POST'])
 def api_context_update(id):
-	obj = request.form
-	context = Context.query.get(id)
-	if context:
-		context.title = obj.get('title', context.title)
-		context.description = obj.get('description', context.description)
-		context.modified_at = datetime.now()
-		db.session.commit()
-		return success(context.to_hash())
-	return error("some parameters are missing")
+    obj = request.form
+    context = Context.query.get(id)
+    if context:
+        context.title = obj.get('title', context.title)
+        context.description = obj.get('description', context.description)
+        if 'icon' in obj:
+            context.extras = obj.get('icon', context.extras)
+        context.modified_at = datetime.now()
+        db.session.commit()
+        return success(context.to_hash())
+    return error("some parameters are missing")
 
 @app.route('/api/context/<id>/delete', methods = ['GET'])
 def api_context_delete(id):
@@ -566,6 +575,9 @@ def api_context_add_activity(site_name):
         desc = obj['description']
         new_context = Context("Activity", site.name + "_" + title, title, desc)
         new_context.site_id = site.id
+        if 'icon' in obj:
+            icon = obj['icon']
+            new_context.extras = icon
         new_context.site = site
         db.session.add(new_context)
         db.session.commit()
@@ -619,7 +631,7 @@ def api_feedback_add_to_note(kind,model,id,username):
             feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
             db.session.add(feedback)
             db.session.commit()
-            if model == 'note':
+            if model.lower() == 'note':
                 #if target.kind == 'DesignIdea':
                 feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
                 feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()

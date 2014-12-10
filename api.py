@@ -22,6 +22,7 @@ from db_def import Feedback
 from db_def import Site
 from db_def import InteractionLog
 
+import notification
 import trello_api
 import re
 from sqlalchemy import or_
@@ -406,6 +407,9 @@ def api_note_create(username):
                     note.status = ''
                 db.session.add(note)
                 db.session.commit()
+
+                # send notification
+                notification.send_new_note_notification_email(c.title, username, content, note.created_at)
 
                 if kind == 'DesignIdea' and is_note_in_aces(note):
                     print "adding a design idea card to trello."
@@ -1149,6 +1153,7 @@ def get_default_user_id():
     if default_user:
         return default_user.id
     return 1
+
 
 if __name__ == '__main__':
     app.run(debug  = True, host='0.0.0.0')

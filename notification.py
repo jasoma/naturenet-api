@@ -6,7 +6,7 @@ import smtplib
 gmail_user = "naturenet.aces@gmail.com"
 gmail_pwd = "nature-net"
 FROM = 'naturenet.aces@gmail.com'
-TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu']
+TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu', 'naturenet@aspennature.org']
 
 def send_new_note_notification_email(activity_name, username, useremail, comment, timestamp):
     if activity_name.lower() != "stump the community":
@@ -24,6 +24,7 @@ def populate_notification_list_aces():
     to_list = []
     to_list.append(TO[0])
     to_list.append(TO[1])
+    to_list.append(TO[2])
     #accounts = Account.query.filter(Account.affiliation.ilike('aces')).all()
     #for a in accounts:
     #    if a.email:

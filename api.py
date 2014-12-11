@@ -409,7 +409,7 @@ def api_note_create(username):
                 db.session.commit()
 
                 # send notification
-                notification.send_new_note_notification_email(c.title, username, content, note.created_at)
+                notification.send_new_note_notification_email(c.title, username, a.email, content, note.created_at)
 
                 if kind == 'DesignIdea' and is_note_in_aces(note):
                     print "adding a design idea card to trello."

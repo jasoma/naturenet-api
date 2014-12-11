@@ -6,27 +6,28 @@ import smtplib
 gmail_user = "naturenet.aces@gmail.com"
 gmail_pwd = "nature-net"
 FROM = 'naturenet.aces@gmail.com'
-TO = ['mj_mahzoon@yahoo.com']
+TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu']
 
-def send_new_note_notification_email(activity_name, username, comment, timestamp):
+def send_new_note_notification_email(activity_name, username, useremail, comment, timestamp):
     if activity_name.lower() != "stump the community":
         return
     subject = "New NatureNet Question"
     message_text = "Dear ACES,\r\n\r\nNatureNet user " + username +\
-                   " posted this on " + str(timestamp) + ":\r\n\r\n" + comment + "\r\n\r\n" +\
-                   "Reply to this message to continue the conversation.\r\n\r\nRegards,\r\nThe NatureNet Team.\r\n"
+                   " posted this" + ":\r\n\r\n\"" + comment + "\"\r\n\r\n" +\
+                   "Reply to "+ useremail + " to continue the conversation.\r\n\r\nRegards,\r\nThe NatureNet Team.\r\n"
     to_list = populate_notification_list_aces()
     print "sending notification to: "
     print to_list
-    # send_email(subject, message_text, to_list)
+    send_email(subject, message_text, to_list)
 
 def populate_notification_list_aces():
     to_list = []
     to_list.append(TO[0])
-    accounts = Account.query.filter(Account.affiliation.ilike('aces')).all()
-    for a in accounts:
-        if a.email:
-            to_list.append(a.email)
+    to_list.append(TO[1])
+    #accounts = Account.query.filter(Account.affiliation.ilike('aces')).all()
+    #for a in accounts:
+    #    if a.email:
+    #        to_list.append(a.email)
     return to_list
 
 def send_email(subject, message_text, to_list):

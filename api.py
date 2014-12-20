@@ -26,6 +26,9 @@ import notification
 import trello_api
 import re
 from sqlalchemy import or_
+from sqlalchemy import func
+from sqlalchemy import distinct
+import traceback
 
 from datetime import datetime
 from datetime import timedelta
@@ -662,7 +665,7 @@ def api_feedback_add_to_media(id,username):
 		media = Media.query.get(id)
 		account = Account.query.filter_by(username=username).first()
 		if media and account and 'content' in request.form:
-			kind = "Comment"
+			kind = "comment"
 			content = request.form['content']
 			table_name = "media"
 			row_id = id
@@ -975,6 +978,109 @@ def api_notification_alive(site):
         print "updating the previous notification."
     db.session.commit()
     return success("OK!")
+
+#
+# Stats
+#
+# @app.route('/api/stats/observations/at/<site>', methods=['GET'])
+@app.route('/api/stats/observations', methods=['GET'])
+def api_stats_observations():
+    # the_site = Site.query.filter_by(name=site).first()
+    # if not the_site:
+    #     return error("Site not found.")
+    observations = []
+    try:
+        observations = db.session.query(func.count(Note.id), func.date(Note.modified_at)).filter_by(kind="FieldNote").order_by(func.date(Note.modified_at)).group_by(func.date(Note.modified_at)).all()
+        # print observations
+    except:
+        print traceback.format_exc()
+    r = ""
+    sum = 0
+    for obsv in observations:
+        r = r + str(obsv[1]) + "," + str(obsv[0]) + "\r\n"
+        sum = sum + obsv[0]
+    r = r + str(sum)
+    return r
+
+# @app.route('/api/stats/designideas/at/<site>', methods=['GET'])
+@app.route('/api/stats/designideas', methods=['GET'])
+def api_stats_designideas():
+    # the_site = Site.query.filter_by(name=site).first()
+    # if not the_site:
+    #     return error("Site not found.")
+    designideas = []
+    try:
+        designideas = db.session.query(func.count(Note.id), func.date(Note.modified_at)).filter_by(kind="DesignIdea").order_by(func.date(Note.modified_at)).group_by(func.date(Note.modified_at)).all()
+        # print designideas
+    except:
+        print traceback.format_exc()
+    r = ""
+    sum = 0
+    for ideas in designideas:
+        r = r + str(ideas[1]) + "," + str(ideas[0]) + "\r\n"
+        sum = sum + ideas[0]
+    r = r + str(sum)
+    return r
+
+# @app.route('/api/stats/users/at/<site>', methods=['GET'])
+@app.route('/api/stats/users', methods=['GET'])
+def api_stats_users():
+    # the_site = Site.query.filter_by(name=site).first()
+    # if not the_site:
+    #     return error("Site not found.")
+    users = []
+    try:
+        users = db.session.query(func.count(Account.id), func.date(Account.modified_at)).order_by(func.date(Account.modified_at)).group_by(func.date(Account.modified_at)).all()
+        # print users
+    except:
+        print traceback.format_exc()
+    r = ""
+    sum = 0
+    for u in users:
+        r = r + str(u[1]) + "," + str(u[0]) + "\r\n"
+        sum = sum + u[0]
+    r = r + str(sum)
+    return r
+
+# @app.route('/api/stats/comments/at/<site>', methods=['GET'])
+@app.route('/api/stats/comments', methods=['GET'])
+def api_stats_comments():
+    # the_site = Site.query.filter_by(name=site).first()
+    # if not the_site:
+    #     return error("Site not found.")
+    comments = []
+    try:
+        comments = db.session.query(func.count(Feedback.id), func.date(Feedback.modified_at)).filter(Feedback.kind.ilike('comment')).order_by(func.date(Feedback.modified_at)).group_by(func.date(Feedback.modified_at)).all()
+        # print comments
+    except:
+        print traceback.format_exc()
+    r = ""
+    sum = 0
+    for c in comments:
+        r = r + str(c[1]) + "," + str(c[0]) + "\r\n"
+        sum = sum + c[0]
+    r = r + str(sum)
+    return r
+
+# @app.route('/api/stats/likes/at/<site>', methods=['GET'])
+@app.route('/api/stats/likes', methods=['GET'])
+def api_stats_likes():
+    # the_site = Site.query.filter_by(name=site).first()
+    # if not the_site:
+    #     return error("Site not found.")
+    likes = []
+    try:
+        likes = db.session.query(func.count(Feedback.id), func.date(Feedback.modified_at)).filter(Feedback.kind.ilike('like')).order_by(func.date(Feedback.modified_at)).group_by(func.date(Feedback.modified_at)).all()
+        # print likes
+    except:
+        print traceback.format_exc()
+    r = ""
+    sum = 0
+    for l in likes:
+        r = r + str(l[1]) + "," + str(l[0]) + "\r\n"
+        sum = sum + l[0]
+    r = r + str(sum)
+    return r
 
 #
 # Events

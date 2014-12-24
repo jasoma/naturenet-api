@@ -9,7 +9,7 @@ FROM = 'naturenet.aces@gmail.com'
 TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu', 'naturenet@aspennature.org']
 
 def send_new_note_notification_email(activity_name, username, useremail, comment, timestamp):
-    if activity_name.lower() != "stump the community":
+    if activity_name.lower() != "ask a naturalist":
         return
     subject = "New NatureNet Question"
     message_text = "Dear ACES,\r\n\r\nNatureNet user " + username +\

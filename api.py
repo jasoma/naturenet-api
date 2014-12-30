@@ -994,12 +994,12 @@ def api_stats_observations():
         # print observations
     except:
         print traceback.format_exc()
-    r = ""
+    r = "date\tfrequency\r\n"
     sum = 0
     for obsv in observations:
-        r = r + str(obsv[1]) + "," + str(obsv[0]) + "\r\n"
+        r = r + str(obsv[1]) + "\t" + str(obsv[0]) + "\r\n"
         sum = sum + obsv[0]
-    r = r + str(sum)
+    # r = r + str(sum)
     return r
 
 # @app.route('/api/stats/designideas/at/<site>', methods=['GET'])
@@ -1014,12 +1014,12 @@ def api_stats_designideas():
         # print designideas
     except:
         print traceback.format_exc()
-    r = ""
+    r = "date\tfrequency\r\n"
     sum = 0
     for ideas in designideas:
-        r = r + str(ideas[1]) + "," + str(ideas[0]) + "\r\n"
+        r = r + str(ideas[1]) + "\t" + str(ideas[0]) + "\r\n"
         sum = sum + ideas[0]
-    r = r + str(sum)
+    # r = r + str(sum)
     return r
 
 # @app.route('/api/stats/users/at/<site>', methods=['GET'])
@@ -1034,12 +1034,12 @@ def api_stats_users():
         # print users
     except:
         print traceback.format_exc()
-    r = ""
+    r = "date\tfrequency\r\n"
     sum = 0
     for u in users:
-        r = r + str(u[1]) + "," + str(u[0]) + "\r\n"
+        r = r + str(u[1]) + "\t" + str(u[0]) + "\r\n"
         sum = sum + u[0]
-    r = r + str(sum)
+    # r = r + str(sum)
     return r
 
 # @app.route('/api/stats/comments/at/<site>', methods=['GET'])
@@ -1054,12 +1054,12 @@ def api_stats_comments():
         # print comments
     except:
         print traceback.format_exc()
-    r = ""
+    r = "date\tfrequency\r\n"
     sum = 0
     for c in comments:
-        r = r + str(c[1]) + "," + str(c[0]) + "\r\n"
+        r = r + str(c[1]) + "\t" + str(c[0]) + "\r\n"
         sum = sum + c[0]
-    r = r + str(sum)
+    # r = r + str(sum)
     return r
 
 # @app.route('/api/stats/likes/at/<site>', methods=['GET'])
@@ -1074,12 +1074,12 @@ def api_stats_likes():
         # print likes
     except:
         print traceback.format_exc()
-    r = ""
+    r = "date\tfrequency\r\n"
     sum = 0
     for l in likes:
-        r = r + str(l[1]) + "," + str(l[0]) + "\r\n"
+        r = r + str(l[1]) + "\t" + str(l[0]) + "\r\n"
         sum = sum + l[0]
-    r = r + str(sum)
+    # r = r + str(sum)
     return r
 
 #

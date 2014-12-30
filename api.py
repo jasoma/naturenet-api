@@ -984,6 +984,7 @@ def api_notification_alive(site):
 #
 # @app.route('/api/stats/observations/at/<site>', methods=['GET'])
 @app.route('/api/stats/observations', methods=['GET'])
+@crossdomain(origin='*')
 def api_stats_observations():
     # the_site = Site.query.filter_by(name=site).first()
     # if not the_site:
@@ -1004,6 +1005,7 @@ def api_stats_observations():
 
 # @app.route('/api/stats/designideas/at/<site>', methods=['GET'])
 @app.route('/api/stats/designideas', methods=['GET'])
+@crossdomain(origin='*')
 def api_stats_designideas():
     # the_site = Site.query.filter_by(name=site).first()
     # if not the_site:
@@ -1024,6 +1026,7 @@ def api_stats_designideas():
 
 # @app.route('/api/stats/users/at/<site>', methods=['GET'])
 @app.route('/api/stats/users', methods=['GET'])
+@crossdomain(origin='*')
 def api_stats_users():
     # the_site = Site.query.filter_by(name=site).first()
     # if not the_site:
@@ -1044,6 +1047,7 @@ def api_stats_users():
 
 # @app.route('/api/stats/comments/at/<site>', methods=['GET'])
 @app.route('/api/stats/comments', methods=['GET'])
+@crossdomain(origin='*')
 def api_stats_comments():
     # the_site = Site.query.filter_by(name=site).first()
     # if not the_site:
@@ -1064,6 +1068,7 @@ def api_stats_comments():
 
 # @app.route('/api/stats/likes/at/<site>', methods=['GET'])
 @app.route('/api/stats/likes', methods=['GET'])
+@crossdomain(origin='*')
 def api_stats_likes():
     # the_site = Site.query.filter_by(name=site).first()
     # if not the_site:

@@ -416,7 +416,7 @@ def api_note_create(username):
 
                 if kind == 'DesignIdea' and is_note_in_aces(note):
                     print "adding a design idea card to trello."
-                    card = trello_api.add_card(note.id, content, note.to_trello_desc(), note.status)
+                    card = trello_api.add_card(note.id, content, note.to_trello_desc(), note.status, use_default_list=True)
                     if card:
                         note.trello_card_id = card.id
                         db.session.commit()

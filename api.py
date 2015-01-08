@@ -401,6 +401,7 @@ def api_note_create(username):
 			c = Context.query.filter_by(name=context).first()
 			if a and c:
 				note = Note(a.id, c.id, kind, content)
+                a.modified_at = datetime.now()
                 if 'longitude' in obj and 'latitude' in obj:
 					note.longitude = obj['longitude']
 					note.latitude = obj['latitude']

@@ -11,7 +11,7 @@ from time import strftime
 
 app = Flask(__name__)
 # naturenet
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://iovivwytcukmgi:cdigSG1Zx3Ek_ANVRbSAN1r0db@ec2-174-129-197-200.compute-1.amazonaws.com:5432/d660ihttvdl1ls'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://xzriapqqrpphav:h0WI2DSTCSLI4HOrZiVFtNGVPk@ec2-54-163-228-58.compute-1.amazonaws.com:5432/dfqsur6a7hn83j'
 # naturenet-dev
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://ypndcubhbvduxq:iYXNwxj3-ZTjOPumFcbBnlJmyW@ec2-54-225-101-164.compute-1.amazonaws.com:5432/d4gld0csl5044k'
 # ACES

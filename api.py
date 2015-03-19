@@ -358,7 +358,7 @@ def api_designidea_list_at_site(site):
 	if not the_site:
 		return error("site does not exist")
 	
-	notes = Note.query.filter(Note.kind.ilike('designidea')).all()
+	notes = Note.query.filter(Note.kind.ilike('designidea')).order_by(Note.modified_at.asc()).all()
 	context_ids = [c.id for c in the_site.contexts]
 	notes = [x for x in notes if x.context_id in context_ids]
 	return success([x.to_hash(format) for x in notes])
@@ -371,7 +371,7 @@ def api_notes_list_at_site(site):
 	if not the_site:
 		return error("site does not exist")
 	
-	notes = Note.query.filter(Note.kind.ilike('fieldnote')).all()
+	notes = Note.query.filter(Note.kind.ilike('fieldnote')).order_by(Note.modified_at.asc()).all()
 	context_ids = [c.id for c in the_site.contexts]
 	notes = [x for x in notes if x.context_id in context_ids]
 	return success([x.to_hash(format) for x in notes])

@@ -350,6 +350,32 @@ def api_note_list():
 	notes = Note.query.limit(n)
 	return success([x.to_hash(format) for x in notes])
 
+@app.route('/api/designideas/at/<site>')
+@crossdomain(origin='*')
+def api_designidea_list_at_site(site):	
+	format = request.args.get('format', 'full')
+	the_site = Site.query.filter_by(name=site).first()
+	if not the_site:
+		return error("site does not exist")
+	
+	notes = Note.query.filter(Note.kind.ilike('designidea')).all()
+	context_ids = [c.id for c in the_site.contexts]
+	notes = [x for x in notes if x.context_id in context_ids]
+	return success([x.to_hash(format) for x in notes])
+
+@app.route('/api/notes/at/<site>')
+@crossdomain(origin='*')
+def api_notes_list_at_site(site):	
+	format = request.args.get('format', 'full')
+	the_site = Site.query.filter_by(name=site).first()
+	if not the_site:
+		return error("site does not exist")
+	
+	notes = Note.query.filter(Note.kind.ilike('fieldnote')).all()
+	context_ids = [c.id for c in the_site.contexts]
+	notes = [x for x in notes if x.context_id in context_ids]
+	return success([x.to_hash(format) for x in notes])
+
 @app.route('/api/notes/all')
 @crossdomain(origin='*')
 def api_note_list_all():

@@ -612,6 +612,7 @@ def api_feedback_get(id):
 
 
 @app.route('/api/feedback/<id>/update', methods = ['POST'])
+@crossdomain(origin='*')
 def api_feedback_update(id):
 	obj = request.form
 	username = obj.get('username', '')
@@ -625,43 +626,49 @@ def api_feedback_update(id):
 		return success(feedback.to_hash())
 	return error("some parameters are missing")	
 
-@app.route('/api/feedback/new/<kind>/for/<model>/<id>/by/<username>',
-	methods = ['POST', 'GET'])
+@app.route('/api/feedback/new/<kind>/for/<model>/<id>/by/<username>',methods = ['POST', 'GET'])
+@crossdomain(origin='*')
 def api_feedback_add_to_note(kind,model,id,username):
     if request.method == 'POST':
         account = Account.query.filter_by(username=username).first()
         target = Feedback.resolve_target(model,id)
         print "adding feedback [%s] about [%s] by user [%s]" % (kind, target, username)
-        if target and account:
-            content = request.form.get('content','')
-            parent_id = request.form.get('parent_id',0)
-            table_name = target.__class__.__name__
-            row_id = id
-            feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
-            db.session.add(feedback)
-            db.session.commit()
-            if model.lower() == 'note':
-                #if target.kind == 'DesignIdea':
-                feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
-                feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-                new_desc = find_location_for_note(target)
-                if len(new_desc) > 0:
-                    new_desc = "location: " + new_desc + "\r\n"
-                trello_api.update_card(target.id, target.content, new_desc + target.to_trello_desc() + "\r\n#likes: " + \
-                                   str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
-                if kind.lower() == 'comment':
-                    account_username = "The Design Team"
-                    if account.username != 'default':
-                        account_username = account.username
-                    trello_api.add_comment_card(target.id, target.content, content)
-            return success(feedback.to_hash())
-        return error("something wrong")
+        try:
+            if target and account:
+                content = request.form.get('content','')
+                #print "content: ", content
+                if content == '':
+                    return error("Content cannot be empty.")
+                parent_id = request.form.get('parent_id',0)
+                table_name = target.__class__.__name__
+                row_id = id
+                feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
+                db.session.add(feedback)
+                db.session.commit()
+                if model.lower() == 'note':
+                    #if target.kind == 'DesignIdea':
+                    feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
+                    feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+                    new_desc = find_location_for_note(target)
+                    if len(new_desc) > 0:
+                        new_desc = "location: " + new_desc + "\r\n"
+                    trello_api.update_card(target.id, target.content, new_desc + target.to_trello_desc() + "\r\n#likes: " + \
+                                       str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
+                    if kind.lower() == 'comment':
+                        account_username = "The Design Team"
+                        if account.username != 'default':
+                            account_username = account.username
+                        trello_api.add_comment_card(target.id, target.content, content)
+                return success(feedback.to_hash())
+            return error("something wrong")
+        except:
+            print traceback.format_exc()
     else:
 		return error("add feedback to note [%s] by [%s], this operation must be done through a post" %
 			(id, username))
 
-@app.route('/api/media/<id>/feedback/<username>/new/comment',
-	methods = ['POST','GET'])
+@app.route('/api/media/<id>/feedback/<username>/new/comment',methods = ['POST','GET'])
+@crossdomain(origin='*')
 def api_feedback_add_to_media(id,username):
 	if request.method == 'POST':
 		media = Media.query.get(id)

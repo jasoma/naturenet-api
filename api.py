@@ -390,6 +390,7 @@ def api_note_get_feedbacks(id):
 	return success([x.to_hash() for x in feedbacks])
 
 @app.route('/api/note/<id>/update', methods = ['POST'])
+@crossdomain(origin='*')
 def api_note_update(id):
     obj = request.form
     note = Note.query.get(id)
@@ -417,6 +418,7 @@ def api_note_update(id):
     return error("some parameters are missing")
 
 @app.route('/api/note/new/<username>', methods = ['POST', 'GET'])
+@crossdomain(origin='*')
 def api_note_create(username):
 	if request.method == 'POST':
 		obj = request.form	

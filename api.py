@@ -26,6 +26,7 @@ import notification
 import trello_api
 import re
 from sqlalchemy import or_
+from sqlalchemy import and_
 from sqlalchemy import func
 from sqlalchemy import distinct
 import traceback
@@ -805,6 +806,29 @@ def api_sync_site_notes_since_minute(year,month,date,hour,minute,site):
         return error("site does not exist")
     context_ids = [c.id for c in the_site.contexts]
     notes = [x for x in notes if x.context_id in context_ids]
+    return sync_success([x.to_hash() for x in notes])
+
+@app.route('/api/sync/notes/within/<year>/<month>/at/<site>', methods=['GET'])
+@crossdomain(origin='*')
+def api_sync_notes_within_year_month(year, month, site):
+    try:
+        month_int = int(month)
+        year_int = int(year)
+        since_date = datetime(year_int, month_int, 1)
+        month_int = month_int + 1
+        if month_int == 13:
+            month_int = 1
+            year_int = year_int + 1
+        since_date_plus_one = datetime(year_int, month_int, 1)
+        notes = Note.query.filter(and_(Note.status != "deleted", and_(Note.modified_at  >= since_date, Note.modified_at < since_date_plus_one))).order_by(Note.modified_at.asc()).all()
+        the_site = Site.query.filter_by(name=site).first()
+        if not the_site:
+            return error("site does not exist")
+        context_ids = [c.id for c in the_site.contexts]
+        notes = [x for x in notes if x.context_id in context_ids]
+        #print len(notes)
+    except:
+        print traceback.format_exc()
     return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')

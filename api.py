@@ -441,9 +441,6 @@ def api_note_create(username):
                 db.session.add(note)
                 db.session.commit()
 
-                # send notification
-                notification.send_new_note_notification_email(c.title, username, a.email, content, note.created_at)
-
                 if kind == 'DesignIdea' and is_note_in_aces(note):
                     print "adding a design idea card to trello."
                     card = trello_api.add_card(note.id, content, note.to_trello_desc(), note.status, use_default_list=True)
@@ -493,50 +490,58 @@ def allowed_file(filename):
 
 @app.route('/api/note/<id>/new/photo', methods = ['POST','GET'])
 def api_media_create(id):
-    if request.method == 'POST':
-        link = request.form.get("link","")#["link"] or request.form["link"] or ""
-        title = request.form.get("title","")#files["title"] or request.form["title"] or ""
-        kind = "Photo"
-        note = Note.query.get(id)
-        if note:
-            media = Media(note.id, kind, title, link)
-            file = request.files.get("file",None)
-            if not file:
-                print "No file provided."
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                # #print "saving locally to " + filename
-                response = cloudinary.uploader.upload(file, public_id = media.id)
-                # print "uploading to cloudinary .."
-                if response:
-                    # print response['url']
-                    media.link = response['url']
-            db.session.add(media)
-            note.status = str(note.created_at.date())
-            note.modified_at = datetime.now()
-            db.session.commit()
+    try:
+    
+        if request.method == 'POST':
+            link = request.form.get("link","")#["link"] or request.form["link"] or ""
+            title = request.form.get("title","")#files["title"] or request.form["title"] or ""
+            kind = "Photo"
+            note = Note.query.get(id)
+            if note:
+                media = Media(note.id, kind, title, link)
+                file = request.files.get("file",None)
+                if not file:
+                    print "No file provided."
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    # #print "saving locally to " + filename
+                    response = cloudinary.uploader.upload(file, public_id = media.id)
+                    # print "uploading to cloudinary .."
+                    if response:
+                        # print response['url']
+                        media.link = response['url']
+                db.session.add(media)
+                note.status = str(note.created_at.date())
+                note.modified_at = datetime.now()
+                db.session.commit()
 
-            if is_note_in_aces(note):
-                print "Adding card to trello... link: ", media.link
-                feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-                new_desc = find_location_for_note(note)
-                if len(new_desc) > 0:
-                    new_desc = "location: " + new_desc + "\r\n"
-                new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
+                if is_note_in_aces(note):
+                
+                    # send notification
+                    notification.send_new_note_notification_email(note, media, True)
+                
+                    print "Adding card to trello... link: ", media.link
+                    feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+                    new_desc = find_location_for_note(note)
+                    if len(new_desc) > 0:
+                        new_desc = "location: " + new_desc + "\r\n"
+                    new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
 
-                if len(note.content) == 0:
-                    card = trello_api.add_card_with_attachment(note.id, "[no description]", new_desc, note.status, media.get_url())
-                else:
-                    card = trello_api.add_card_with_attachment(note.id, note.content, new_desc, note.status, media.get_url())
-                if card:
-                    note.trello_card_id = card.id
-                    db.session.commit()
-            return success(media.to_hash())
+                    if len(note.content) == 0:
+                        card = trello_api.add_card_with_attachment(note.id, "[no description]", new_desc, note.status, media.get_url())
+                    else:
+                        card = trello_api.add_card_with_attachment(note.id, note.content, new_desc, note.status, media.get_url())
+                    if card:
+                        note.trello_card_id = card.id
+                        db.session.commit()
+                return success(media.to_hash())
+            else:
+                return error("note id %d is invalid" % id)
         else:
-            return error("note id %d is invalid" % id)
-    else:
-        return error("adding a media object to note {%s}, this request must be a post." % id)
+            return error("adding a media object to note {%s}, this request must be a post." % id)
+    except:
+        print traceback.format_exc()
 
 #
 # Context

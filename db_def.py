@@ -280,6 +280,12 @@ class Media(db.Model):
         else:
             return "http://youtu.be/" + self.link
 
+    def get_url_smallsized(self):
+        if self.kind == 'Photo':
+            return "http://res.cloudinary.com/university-of-colorado/image/upload/w_0.1/v1400187706/" + self.link
+        else:
+            return "http://youtu.be/" + self.link
+
     def to_hash(self, format = 'full'):        
         #if format == 'full'
         return {

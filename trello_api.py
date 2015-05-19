@@ -253,7 +253,7 @@ def update_card(note_id, title, description):
         print "Not initialized. Use setup function to initialize."
         return
     c = get_card_by_id(note_id)
-    print "updating card: title = %s" % (title)
+    # print "updating card: title = %s" % (title)
     if c:
         c._set_remote_attribute('desc', description)
         if len(title)>0:
@@ -267,7 +267,7 @@ def add_comment_card(id, title, comment_text):
         print "Not initialized. Use setup function to initialize."
         return
     c = get_card_by_id(id)
-    print "adding comment to card: title = %s" % (title)
+    # print "adding comment to card: title = %s" % (title)
     if c:
         c.comment(comment_text)
     return

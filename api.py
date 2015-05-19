@@ -213,7 +213,7 @@ def api_account_get(query):
 @app.route('/api/account/<username>/notes')
 @crossdomain(origin='*')
 def api_account_get_notes(username):
-	account = Account.query.filter_by(username=username).first()	
+	account = Account.query.filter_by(username=username).first()
 	return success([x.to_hash() for x in account.notes])
 
 @app.route('/api/account/<username>/feedbacks')
@@ -227,6 +227,21 @@ def api_account_get_feedbacks(username):
 def api_accounts_list():
 	accounts = Account.query.all()
 	return success([x.to_hash() for x in accounts])
+
+@app.route('/api/account/<username>/activity/<activityname>/countstats')
+@crossdomain(origin='*')
+def api_account_activity_countstats(username, activityname):
+    account = Account.query.filter_by(username=username).first()
+    activity = Context.query.filter_by(name=activityname).first()
+    h = {}
+    if not account:
+        return error("account does not exists.")
+    if not activity:
+        return error("activity does not exists.")
+    h = find_latest_counts(account, activity, h)
+    h = find_latest_seasonal_counts(activity, h)
+    return success(h)
+
 
 #
 # WebAccount
@@ -627,6 +642,22 @@ def api_context_add_activity(site_name):
     else:
         return error("title or description for the activity not provided.")
 
+@app.route('/api/context/active/activities/at/<site_name>', methods = ['GET'])
+def api_context_active_activities_at_site(site_name):
+    site = Site.query.filter_by(name=site_name).first()
+    if not site:
+        return error("site does not exists.")
+    active_activities = get_active_contexts(site.id, 'activity')
+    return success([x.to_hash() for x in active_activities])
+
+@app.route('/api/context/active/designideas/at/<site_name>', methods = ['GET'])
+def api_context_active_designideas_at_site(site_name):
+    site = Site.query.filter_by(name=site_name).first()
+    if not site:
+        return error("site does not exists.")
+    active_designideas = get_active_contexts(site.id, 'design')
+    return success([x.to_hash() for x in active_designideas])
+
 #
 # Feedback
 #
@@ -746,6 +777,30 @@ def api_site_get_long(name):
 		return success(h)
 	else:
 		return error("site does not exist")
+
+@app.route('/api/site/<name>/active/activities')
+@crossdomain(origin='*')
+def api_site_get_active_activities(name):
+    site = Site.query.filter_by(name=name).first()	
+    if site:
+        h = site.to_hash() 
+        activities = get_active_contexts(site.id, 'activity')
+        h['contexts'] = [c.to_hash() for c in activities]
+        return success(h)
+    else:
+        return error("site does not exist")
+
+@app.route('/api/site/<name>/active/designideas')
+@crossdomain(origin='*')
+def api_site_get_active_designideas(name):
+    site = Site.query.filter_by(name=name).first()	
+    if site:
+        h = site.to_hash() 
+        designideas = get_active_contexts(site.id, 'design')
+        h['contexts'] = [c.to_hash() for c in designideas]
+        return success(h)
+    else:
+        return error("site does not exist")
 
 @app.route('/api/site/<name>/notes')
 @crossdomain(origin='*')
@@ -1330,6 +1385,54 @@ def get_default_user_id():
         return default_user.id
     return 1
 
+def get_active_contexts(site_id, context_kind):
+    all_contexts = Context.query.filter(Context.site_id==site_id, Context.kind.ilike(context_kind)).all()
+    active_contexts = []
+    for context in all_contexts:
+        extra_val = context.extras
+        e = {}
+        try:
+            e = json.loads(extra_val)
+            if 'active' not in e or e['active']:
+                active_contexts.append(context)
+        except:
+            active_contexts.append(context)
+            continue
+    active_contexts = sorted(active_contexts, key=lambda a: a.id, reverse=True)
+    return active_contexts
+
+def find_latest_counts(account, activity, h):
+    date_now = datetime.now()
+    today = datetime(date_now.year, date_now.month, date_now.day)
+    the_note = Note.query.filter(Note.status != "deleted", Note.modified_at  >= today, Note.context_id==activity.id, Note.account_id==account.id).order_by(Note.modified_at.desc()).first()
+    if not the_note:
+        return h
+    note_content = the_note.content
+    e = {}
+    try:
+        e = json.loads(note_content)
+    except:
+        return h
+    for key, value in e.iteritems():
+        h[key] = value
+    return h
+
+def find_latest_seasonal_counts(activity, h):
+    extra_val = activity.extras
+    e = {}
+    try:
+        e = json.loads(extra_val)
+        if 'Birds' in e and 'birds' in h:
+            for b_a in e['Birds']:
+                for b_h in h['birds']:
+                    if b_h['name'] == b_a['name']:
+                        if 'seasonal_count' in b_a:
+                            b_h['seasonal_count'] = b_a['seasonal_count']
+                        else:
+                            b_h['seasonal_count'] = 0
+    except:
+        return h
+    return h
 
 if __name__ == '__main__':
     app.run(debug  = True, host='0.0.0.0')

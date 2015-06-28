@@ -11,7 +11,7 @@ from email.MIMEImage import MIMEImage
 gmail_user = "naturenet.aces@gmail.com"
 gmail_pwd = "nature-net"
 FROM = 'naturenet.aces@gmail.com'
-TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu', 'naturenet@aspennature.org']
+TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu', 'naturenet@aspennature.org', 'kazjon@me.com']
 
 def send_new_note_notification_email(note, media, include_img):
     try:
@@ -49,6 +49,7 @@ def populate_notification_list_aces():
     to_list.append(TO[0])
     to_list.append(TO[1])
     to_list.append(TO[2])
+    to_list.append(TO[3])
     #accounts = Account.query.filter(Account.affiliation.ilike('aces')).all()
     #for a in accounts:
     #    if a.email:

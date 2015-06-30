@@ -38,7 +38,7 @@ def send_new_note_notification_email(note, media, include_img):
         print "sending notification to: "
         print to_list
         if include_img:
-            send_multipart_email(subject, html_text1, html_text2, media.get_url_smallsized(), note.account.email)
+            send_multipart_email(subject, html_text1, html_text2, media.get_url_smallsized(), note.account.email, to_list)
         else:
             send_email(subject, message_text1 + message_text2, to_list)
     except:
@@ -70,11 +70,11 @@ def send_email(subject, message_text, to_list):
     except:
         print traceback.format_exc()
 
-def send_multipart_email(subject, text_part1, text_part2, img_url, replyto):
+def send_multipart_email(subject, text_part1, text_part2, img_url, replyto, to_list):
     msgRoot = MIMEMultipart('related')
     msgRoot['Subject'] = subject
     msgRoot['From'] = FROM
-    msgRoot['To'] = ", ".join(TO)
+    msgRoot['To'] = ", ".join(to_list)
     msgRoot.add_header('reply-to', replyto)
     msgRoot.preamble = 'This is a multi-part message in MIME format.'
     msgAlternative = MIMEMultipart('alternative')

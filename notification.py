@@ -94,5 +94,5 @@ def send_multipart_email(subject, text_part1, text_part2, img_url, replyto):
     smtp.ehlo()
     smtp.starttls()
     smtp.login(gmail_user, gmail_pwd)
-    smtp.sendmail(FROM, ", ".join(TO), msgRoot.as_string())
+    smtp.sendmail(FROM, to_list, msgRoot.as_string())
     smtp.quit()

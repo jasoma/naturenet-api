@@ -130,11 +130,13 @@ def api():
 #
 
 @app.route('/api/accounts/count')
+@crossdomain(origin='*')
 def api_accounts_count():
 	n = Account.query.count()
 	return jsonify({'success' : True, 'data' : n})
 
 @app.route('/api/account/delete/<username>', methods = ['GET'])
+@crossdomain(origin='*')
 def api_account_delete(username):
 	account = Account.query.filter_by(username=username).first()
 	if account:
@@ -146,6 +148,7 @@ def api_account_delete(username):
 		return error("account does not exist")
 
 @app.route('/api/account/update/<username>', methods = ['POST','GET'])
+@crossdomain(origin='*')
 def api_account_update(username):
     account = Account.query.filter_by(username=username).first()
     if not account:
@@ -169,6 +172,7 @@ def api_account_update(username):
        return error("the request to update [%s] must be done through a post" % username)
 
 @app.route('/api/account/new/<username>', methods = ['POST','GET'])
+@crossdomain(origin='*')
 def api_account_new(username):
     if request.method == 'POST':
         f = request.form
@@ -248,6 +252,7 @@ def api_account_activity_countstats(username, activityname):
 #
 
 @app.route('/api/webaccounts/count')
+@crossdomain(origin='*')
 def api_webaccounts_count():
 	n = WebAccount.query.count()
 	return jsonify({'success' : True, 'data' : n})
@@ -259,6 +264,7 @@ def api_webaccounts_list():
 	return success([x.to_hash() for x in accounts])
 
 @app.route('/api/webaccount/update/<username>', methods = ['POST','GET'])
+@crossdomain(origin='*')
 def api_webaccount_update(username):
     account = WebAccount.query.filter_by(username=username).first()
     if not account:
@@ -282,6 +288,7 @@ def api_webaccount_update(username):
        return error("the request to update [%s] must be done through a post" % username)
 
 @app.route('/api/webaccount/new/<username>', methods = ['POST','GET'])
+@crossdomain(origin='*')
 def api_webaccount_new(username):
     if request.method == 'POST':
         f = request.form
@@ -312,6 +319,7 @@ def api_webaccount_new(username):
         return error("the request to add [%s] must be done through a post" % username)
 
 @app.route('/api/webaccount/delete/<username>', methods = ['GET'])
+@crossdomain(origin='*')
 def api_webaccount_delete(username):
 	account = WebAccount.query.filter_by(username=username).first()
 	if account:
@@ -323,6 +331,7 @@ def api_webaccount_delete(username):
 		return error("account does not exist")
 
 @app.route('/api/webaccount/<webusername>/relatesto/<username>', methods = ['GET'])
+@crossdomain(origin='*')
 def api_webaccount_relation(webusername, username):
     account = Account.query.filter_by(username=username).first()
     webaccount = WebAccount.query.filter_by(username=webusername).first()
@@ -474,6 +483,7 @@ def api_note_create(username):
 #
 
 @app.route('/api/medias')
+@crossdomain(origin='*')
 def api_media_list():
 	medias = Media.query.all()
 	return success([x.to_hash() for x in medias])
@@ -504,6 +514,7 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 @app.route('/api/note/<id>/new/photo', methods = ['POST','GET'])
+@crossdomain(origin='*')
 def api_media_create(id):
     try:
     
@@ -596,6 +607,7 @@ def api_context_get_all_landmarks():
 	return success([x.to_hash() for x in items])
 
 @app.route('/api/context/<id>/update', methods = ['POST'])
+@crossdomain(origin='*')
 def api_context_update(id):
     obj = request.form
     context = Context.query.get(id)
@@ -610,6 +622,7 @@ def api_context_update(id):
     return error("some parameters are missing")
 
 @app.route('/api/context/<id>/delete', methods = ['GET'])
+@crossdomain(origin='*')
 def api_context_delete(id):
 	# id = request.form.get('id','')
 	context = Context.query.get(id)
@@ -622,6 +635,7 @@ def api_context_delete(id):
 		return error("context does not exist")
 
 @app.route('/api/context/new/activity/at/<site_name>', methods = ['POST'])
+@crossdomain(origin='*')
 def api_context_add_activity(site_name):
     site = Site.query.filter_by(name=site_name).first()
     if not site:
@@ -643,6 +657,7 @@ def api_context_add_activity(site_name):
         return error("title or description for the activity not provided.")
 
 @app.route('/api/context/active/activities/at/<site_name>', methods = ['GET'])
+@crossdomain(origin='*')
 def api_context_active_activities_at_site(site_name):
     site = Site.query.filter_by(name=site_name).first()
     if not site:
@@ -651,6 +666,7 @@ def api_context_active_activities_at_site(site_name):
     return success([x.to_hash() for x in active_activities])
 
 @app.route('/api/context/active/designideas/at/<site_name>', methods = ['GET'])
+@crossdomain(origin='*')
 def api_context_active_designideas_at_site(site_name):
     site = Site.query.filter_by(name=site_name).first()
     if not site:
@@ -856,18 +872,21 @@ def api_site_list_contexts(name):
 # Sync
 #
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>')
+@crossdomain(origin='*')
 def api_sync_account_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	accounts = Account.query.filter(Account.created_at  >= since_date).all()
 	return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/webaccounts/created/since/<year>/<month>/<date>/<hour>/<minute>')
+@crossdomain(origin='*')
 def api_sync_webaccount_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	accounts = WebAccount.query.filter(WebAccount.created_at  >= since_date).all()
 	return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+@crossdomain(origin='*')
 def api_sync_site_account_since_minute(site,year,month,date,hour,minute):
     since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
     accounts = Account.query.filter(Account.modified_at  >= since_date).order_by(Account.modified_at.asc()).all()
@@ -887,12 +906,14 @@ def api_sync_site_account_since_minute(site,year,month,date,hour,minute):
     return sync_success([x.to_hash() for x in site_accounts])
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>')
+@crossdomain(origin='*')
 def api_sync_notes_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	notes = Note.query.filter(Note.created_at  >= since_date).all()
 	return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+@crossdomain(origin='*')
 def api_sync_site_notes_since_minute(year,month,date,hour,minute,site):
     since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
     notes = Note.query.filter(Note.modified_at  >= since_date).order_by(Note.modified_at.asc()).all()
@@ -927,6 +948,7 @@ def api_sync_notes_within_year_month(year, month, site):
     return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+@crossdomain(origin='*')
 def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
     since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
     items = Feedback.query.filter(Feedback.modified_at  >= since_date).order_by(Feedback.modified_at.asc()).all()
@@ -950,6 +972,7 @@ def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
     return sync_success([x.to_hash() for x in site_items])
 
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>')
+@crossdomain(origin='*')
 def api_sync_feedback_since_minute(year,month,date,hour,minute):
 	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
 	items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
@@ -957,6 +980,7 @@ def api_sync_feedback_since_minute(year,month,date,hour,minute):
 
 
 @app.route('/api/sync/interactions/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
+@crossdomain(origin='*')
 def api_sync_interactions_since_minute(year,month,date,hour,minute,site):
     since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
     items = InteractionLog.query.filter(InteractionLog.created_at  >= since_date).order_by(InteractionLog.created_at.asc()).all()
@@ -967,21 +991,25 @@ def api_sync_interactions_since_minute(year,month,date,hour,minute,site):
     return sync_success(add_timestamp_txt([x.to_hash() for x in site_items]))
 
 @app.route('/api/sync/accounts/created/recent/<n>')
+@crossdomain(origin='*')
 def api_sync_account_recent(n):	
 	accounts = Account.query.filter().order_by(Account.created_at.desc()).limit(n)
 	return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/notes/created/recent/<n>')
+@crossdomain(origin='*')
 def api_sync_note_recent(n):	
 	notes = Note.query.filter().order_by(Note.created_at.desc()).limit(n)
 	return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/feedbacks/created/recent/<n>')
+@crossdomain(origin='*')
 def api_sync_feedback_recent(n):	
 	feedbacks = Feedback.query.filter().order_by(Feedback.created_at.desc()).limit(n)
 	return sync_success([x.to_hash() for x in feedbacks])
 
 @app.route('/api/sync/interactions/created/recent/<n>')
+@crossdomain(origin='*')
 def api_sync_interactions_recent(n):
 	interactions = InteractionLog.query.filter().order_by(InteractionLog.created_at.desc()).limit(n)
 	return sync_success([x.to_hash() for x in interactions])

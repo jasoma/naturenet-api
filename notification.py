@@ -11,7 +11,7 @@ from email.MIMEImage import MIMEImage
 gmail_user = "naturenet.aces@gmail.com"
 gmail_pwd = "nature-net"
 FROM = 'naturenet.aces@gmail.com'
-TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu', 'naturenet@aspennature.org', 'kazjon@me.com']
+TO = ['mj_mahzoon@yahoo.com', 'k.grace@uncc.edu', 'naturenet@aspennature.org', 'kazjon@me.com', 'tchris26@uncc.edu']
 
 def send_new_note_notification_email(note, media, include_img):
     try:

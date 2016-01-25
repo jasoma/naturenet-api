@@ -13,14 +13,14 @@ app = Flask(__name__)
 # naturenet
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://xzriapqqrpphav:h0WI2DSTCSLI4HOrZiVFtNGVPk@ec2-54-163-228-58.compute-1.amazonaws.com:5432/dfqsur6a7hn83j'
 # naturenet-dev
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://ypndcubhbvduxq:iYXNwxj3-ZTjOPumFcbBnlJmyW@ec2-54-225-101-164.compute-1.amazonaws.com:5432/d4gld0csl5044k'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://ypndcubhbvduxq:iYXNwxj3-ZTjOPumFcbBnlJmyW@ec2-54-225-101-164.compute-1.amazonaws.com:5432/d4gld0csl5044k'
 # ACES
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://dlwyhanthjnoya:540fV4ZvZGagixmE42WtVkAa8v@ec2-54-243-249-246.compute-1.amazonaws.com:5432/dfgrborutosjtg'
 # local db
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://postgres:lab308@localhost:5432/naturenet-dev'
 
 # local
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/test.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tmp/test.db'
 db = SQLAlchemy(app)
       
 
@@ -72,21 +72,15 @@ class Account(db.Model):
         return '<Account username:%r>' % self.username
 
     def to_hash_short(self):
-        return {'id': self.id, 'username': self.username}
+        return {
+            'id': self.id,
+            'username': self.username,
+            'icon_url': self.icon_url,
+            'affiliation': self.affiliation
+        }
 
     def to_hash(self, format = 'full'): 
-        return {
-            '_model_' : 'Account',
-            'id': self.id, 
-            'username': self.username,
-            'name' : self.name,
-            'email' : self.email,
-            'consent' : self.consent,
-            'password' : (self.password or '').strip(),
-            'icon_url' : self.icon_url,
-            'modified_at' : self.modified_at,
-            'created_at' : self.created_at,
-            'affiliation': self.affiliation}
+        return self.to_hash_short()
 
     def to_json(self):
     	return jsonify(self.to_hash())
@@ -122,20 +116,7 @@ class WebAccount(db.Model):
         return {'id': self.id, 'username': self.username}
 
     def to_hash(self, format = 'full'):
-        return {
-            '_model_' : 'Account',
-            'id': self.id,
-            'username': self.username,
-            'name' : self.name,
-            'email' : self.email,
-            'consent' : self.consent,
-            'password' : (self.password or '').strip(),
-            'icon_url' : self.icon_url,
-            'modified_at' : self.modified_at,
-            'created_at' : self.created_at,
-            'affiliation': self.affiliation,
-            'web_id': self.web_id,
-            'account_id': self.account_id}
+        return self.to_hash_short()
 
     def to_json(self):
     	return jsonify(self.to_hash())

@@ -115,15 +115,28 @@ class CustomJSONEncoder(JSONEncoder):
 app.json_encoder = CustomJSONEncoder  
 
 def success(data):
-	return jsonify({"status_code": 200, "status_txt": "OK", 		
-		"data": data})
+    return jsonify({"status_code": 200, "status_txt": "OK",         
+        "data": data})
 
 def error(msg):
-	return jsonify({"status_code": 400, "status_txt": msg}), 400
+    return jsonify({"status_code": 400, "status_txt": msg}), 400
+    
+def auth_error():
+    return jsonify({"status_code": 403, "status_txt": "You are not allowed to perform this action"}), 403
+
+def validate_credentials(args):
+    username = args.get('username')
+    password = args.get('password')
+    if username is not None and password is not None:
+        account = Account.query.filter_by(username=username).first()
+        if account is not None and account.password == password:
+            return account
+    return None
+        
 
 @app.route('/api')
 def api():
-	return render_template('apis.html')
+    return render_template('apis.html')
 
 #
 # Account
@@ -132,42 +145,47 @@ def api():
 @app.route('/api/accounts/count')
 @crossdomain(origin='*')
 def api_accounts_count():
-	n = Account.query.count()
-	return jsonify({'success' : True, 'data' : n})
+    n = Account.query.count()
+    return jsonify({'success' : True, 'data' : n})
 
 @app.route('/api/account/delete/<username>', methods = ['GET'])
 @crossdomain(origin='*')
 def api_account_delete(username):
-	account = Account.query.filter_by(username=username).first()
-	if account:
-		print "deleting %s " % account.to_hash()
-		db.session.delete(account)
-		db.session.commit()
-		return success({})
-	else:
-		return error("account does not exist")
+    requesting_user = validate_credentials(request.args)
+    if requesting_user is not None:
+        account = Account.query.filter_by(username=username).first()
+        if account is not None and account.username == requesting_user.username:
+            print "deleting %s " % account.to_hash()
+            db.session.delete(account)
+            db.session.commit()
+            return success({})
+    return auth_error()
 
 @app.route('/api/account/update/<username>', methods = ['POST','GET'])
 @crossdomain(origin='*')
 def api_account_update(username):
     account = Account.query.filter_by(username=username).first()
-    if not account:
+    if account is None:
         return error("User: %s does not exists" % username)
     if request.method == 'POST':
-        f = request.form
-        if 'email' in f:
-            account.email = f['email']
-        if 'icon_url' in f:
-            account.icon_url = f['icon_url']
-        if 'password' in f:
-            account.password = f['password']
-        if 'consent' in f:
-            account.consent = f['consent']
-        if 'affiliation' in f:
-            account.affiliation = f['affiliation']
-        account.modified_at = datetime.now()
-        db.session.commit()
-        return success(account.to_hash())
+        requesting_user = validate_credentials(request.form)
+        if requesting_user is not None and account.username == requesting_user.username:
+            f = request.form
+            if 'email' in f:
+                account.email = f['email']
+            if 'icon_url' in f:
+                account.icon_url = f['icon_url']
+            if 'password' in f:
+                account.password = f['password']
+            if 'consent' in f:
+                account.consent = f['consent']
+            if 'affiliation' in f:
+                account.affiliation = f['affiliation']
+            account.modified_at = datetime.now()
+            db.session.commit()
+            return success(account.to_hash())
+        else:
+            return auth_error()
     else:
        return error("the request to update [%s] must be done through a post" % username)
 
@@ -201,36 +219,49 @@ def api_account_new(username):
     else:
         return error("the request to add [%s] must be done through a post" % username)
 
+@app.route('/api/account/login', methods=['POST'])
+@crossdomain(origin='*')
+def api_account_login():
+    f = request.form
+    if 'username' in f and 'password' in f:
+        requesting_user = validate_credentials(request.form)
+        if requesting_user is not None:
+            #login successful
+            return success(requesting_user.to_hash_short())
+        return error('Invalid username or password')
+    else:
+        return error('Username or password is not specified')
+
 @app.route('/api/account/<query>')
 @crossdomain(origin='*')
 def api_account_get(query):
-	field = request.args.get("field","username")
-	if field == 'username':
-		account = Account.query.filter_by(username=query).first()
-	else:
-		account = Account.query.get(query)
-	if account:
-		return success(account.to_hash())
-	else:
-		return error("user does not exist")
+    field = request.args.get("field","username")
+    if field == 'username':
+        account = Account.query.filter_by(username=query).first()
+    else:
+        account = Account.query.get(query)
+    if account:
+        return success(account.to_hash())
+    else:
+        return error("user does not exist")
 
 @app.route('/api/account/<username>/notes')
 @crossdomain(origin='*')
 def api_account_get_notes(username):
-	account = Account.query.filter_by(username=username).first()
-	return success([x.to_hash() for x in account.notes])
+    account = Account.query.filter_by(username=username).first()
+    return success([x.to_hash() for x in account.notes])
 
 @app.route('/api/account/<username>/feedbacks')
 @crossdomain(origin='*')
 def api_account_get_feedbacks(username):
-	account = Account.query.filter_by(username=username).first()
-	return success([x.to_hash() for x in account.feedbacks])
+    account = Account.query.filter_by(username=username).first()
+    return success([x.to_hash() for x in account.feedbacks])
 
 @app.route('/api/accounts')
 @crossdomain(origin='*')
 def api_accounts_list():
-	accounts = Account.query.all()
-	return success([x.to_hash() for x in accounts])
+    accounts = Account.query.all()
+    return success([x.to_hash() for x in accounts])
 
 @app.route('/api/account/<username>/activity/<activityname>/countstats')
 @crossdomain(origin='*')
@@ -250,18 +281,18 @@ def api_account_activity_countstats(username, activityname):
 #
 # WebAccount
 #
-
+'''
 @app.route('/api/webaccounts/count')
 @crossdomain(origin='*')
 def api_webaccounts_count():
-	n = WebAccount.query.count()
-	return jsonify({'success' : True, 'data' : n})
+    n = WebAccount.query.count()
+    return jsonify({'success' : True, 'data' : n})
 
 @app.route('/api/webaccounts')
 @crossdomain(origin='*')
 def api_webaccounts_list():
-	accounts = WebAccount.query.all()
-	return success([x.to_hash() for x in accounts])
+    accounts = WebAccount.query.all()
+    return success([x.to_hash() for x in accounts])
 
 @app.route('/api/webaccount/update/<username>', methods = ['POST','GET'])
 @crossdomain(origin='*')
@@ -321,14 +352,14 @@ def api_webaccount_new(username):
 @app.route('/api/webaccount/delete/<username>', methods = ['GET'])
 @crossdomain(origin='*')
 def api_webaccount_delete(username):
-	account = WebAccount.query.filter_by(username=username).first()
-	if account:
-		print "deleting %s " % account.to_hash()
-		db.session.delete(account)
-		db.session.commit()
-		return success({})
-	else:
-		return error("account does not exist")
+    account = WebAccount.query.filter_by(username=username).first()
+    if account:
+        print "deleting %s " % account.to_hash()
+        db.session.delete(account)
+        db.session.commit()
+        return success({})
+    else:
+        return error("account does not exist")
 
 @app.route('/api/webaccount/<webusername>/relatesto/<username>', methods = ['GET'])
 @crossdomain(origin='*')
@@ -341,7 +372,7 @@ def api_webaccount_relation(webusername, username):
         db.session.commit()
         return success(webaccount.to_hash())
     return error("cannot find the account or webaccount.")
-
+'''
 #
 # Note
 #
@@ -350,68 +381,72 @@ trello_api.setup()
 @app.route('/api/note/<id>')
 @crossdomain(origin='*')
 def api_note_get(id):
-	note = Note.query.get(id)
-	return success(note.to_hash())
+    note = Note.query.get(id)
+    return success(note.to_hash())
 
 @app.route('/api/note/<id>/delete', methods = ['GET'])
 @crossdomain(origin='*')
 def api_note_delete(id):
     note = Note.query.get(id)
-    if note:
-        print "deleting %s " % note.to_hash()
-        trello_api.delete_card(note.id)
-        note.status = "deleted"
-        db.session.commit()
-        return success({})
+    if note is not None:
+        requesting_user = validate_credentials(request.args)
+        if requesting_user is not None and note.account.username == requesting_user.username:
+            print "deleting %s " % note.to_hash()
+            trello_api.delete_card(note.id)
+            note.status = "deleted"
+            db.session.commit()
+            return success({})
+        else:
+            return auth_error()
     else:
         return error("note does not exist")
 
 @app.route('/api/notes')
 @crossdomain(origin='*')
-def api_note_list():	
-	format = request.args.get('format', 'full')
-	n = request.args.get('n',1000)
-	notes = Note.query.limit(n)
-	return success([x.to_hash(format) for x in notes])
+def api_note_list():    
+    format = request.args.get('format', 'full')
+    n = request.args.get('n',1000)
+    notes = Note.query.limit(n)
+    return success([x.to_hash(format) for x in notes])
 
 @app.route('/api/designideas/at/<site>')
 @crossdomain(origin='*')
-def api_designidea_list_at_site(site):	
-	format = request.args.get('format', 'full')
-	the_site = Site.query.filter_by(name=site).first()
-	if not the_site:
-		return error("site does not exist")
-	
-	notes = Note.query.filter(Note.kind.ilike('designidea')).order_by(Note.modified_at.asc()).all()
-	context_ids = [c.id for c in the_site.contexts]
-	notes = [x for x in notes if x.context_id in context_ids]
-	return success([x.to_hash(format) for x in notes])
+def api_designidea_list_at_site(site):    
+    format = request.args.get('format', 'full')
+    the_site = Site.query.filter_by(name=site).first()
+    if not the_site:
+        return error("site does not exist")
+    
+    notes = Note.query.filter(Note.kind.ilike('designidea')).order_by(Note.modified_at.asc()).all()
+    context_ids = [c.id for c in the_site.contexts]
+    notes = [x for x in notes if x.context_id in context_ids]
+    return success([x.to_hash(format) for x in notes])
 
 @app.route('/api/notes/at/<site>')
 @crossdomain(origin='*')
-def api_notes_list_at_site(site):	
-	format = request.args.get('format', 'full')
-	the_site = Site.query.filter_by(name=site).first()
-	if not the_site:
-		return error("site does not exist")
-	
-	notes = Note.query.filter(Note.kind.ilike('fieldnote')).order_by(Note.modified_at.asc()).all()
-	context_ids = [c.id for c in the_site.contexts]
-	notes = [x for x in notes if x.context_id in context_ids]
-	return success([x.to_hash(format) for x in notes])
+def api_notes_list_at_site(site):    
+    format = request.args.get('format', 'full')
+    the_site = Site.query.filter_by(name=site).first()
+    if not the_site:
+        return error("site does not exist")
+    
+    notes = Note.query.filter(Note.kind.ilike('fieldnote')).order_by(Note.modified_at.asc()).all()
+    context_ids = [c.id for c in the_site.contexts]
+    notes = [x for x in notes if x.context_id in context_ids]
+    return success([x.to_hash(format) for x in notes])
 
 @app.route('/api/notes/all')
 @crossdomain(origin='*')
 def api_note_list_all():
-	notes = Note.query.all()
-	return success([x.to_hash() for x in notes])
+    notes = Note.query.all()
+    return success([x.to_hash() for x in notes])
 
 @app.route('/api/note/<id>/feedbacks')
 @crossdomain(origin='*')
 def api_note_get_feedbacks(id):
-	note = Note.query.filter_by(id=id).first()
-	feedbacks = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == id).all()
-	return success([x.to_hash() for x in feedbacks])
+    note = Note.query.filter_by(id=id).first()
+    feedbacks = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id == id).all()
+    return success([x.to_hash() for x in feedbacks])
 
 @app.route('/api/note/<id>/update', methods = ['POST'])
 @crossdomain(origin='*')
@@ -419,64 +454,71 @@ def api_note_update(id):
     obj = request.form
     note = Note.query.get(id)
     if note:
-        note.content = obj.get('content', note.content)
-        note.kind = obj.get('kind', note.kind)
-        note.status = obj.get('status', note.status)
-        if 'context' in obj:
-            c = Context.query.filter_by(name=obj['context']).first()
-            if c == None:
-                return error("context %s does not exist" % obj['context'])
-            note.context = c
-        note.modified_at = datetime.now()
-        db.session.commit()
-        #if note.kind == 'DesignIdea':
-        feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='commnet').all()
-        feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-        new_desc = find_location_for_note(note)
-        if len(new_desc) > 0:
-            new_desc = "location: " + new_desc + "\r\n"
-        new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
-        trello_api.update_card(note.id, note.content, new_desc)
-        trello_api.move_card(note.id, note.status)
-        return success(note.to_hash())
+        requesting_user = validate_credentials(request.form)
+        if requesting_user is not None and note.account.username == requesting_user.username:
+            note.content = obj.get('content', note.content)
+            note.kind = obj.get('kind', note.kind)
+            note.status = obj.get('status', note.status)
+            if 'context' in obj:
+                c = Context.query.filter_by(name=obj['context']).first()
+                if c == None:
+                    return error("context %s does not exist" % obj['context'])
+                note.context = c
+            note.modified_at = datetime.now()
+            db.session.commit()
+            #if note.kind == 'DesignIdea':
+            feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='commnet').all()
+            feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+            new_desc = find_location_for_note(note)
+            if len(new_desc) > 0:
+                new_desc = "location: " + new_desc + "\r\n"
+            new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
+            trello_api.update_card(note.id, note.content, new_desc)
+            trello_api.move_card(note.id, note.status)
+            return success(note.to_hash())
+        else:
+            return auth_error()
     return error("some parameters are missing")
 
 @app.route('/api/note/new/<username>', methods = ['POST', 'GET'])
 @crossdomain(origin='*')
 def api_note_create(username):
-	if request.method == 'POST':
-		obj = request.form	
-		if username and obj and 'content' in obj and 'context' in obj and 'kind' in obj:
-			content = obj['content']
-			context = obj['context']			
-			kind = obj['kind']			
-			a = Account.query.filter_by(username=username).first()
-			c = Context.query.filter_by(name=context).first()
-			if a and c:
-				note = Note(a.id, c.id, kind, content)
-                a.modified_at = datetime.now()
-                if 'longitude' in obj and 'latitude' in obj:
-					note.longitude = obj['longitude']
-					note.latitude = obj['latitude']
-                if 'status' in obj:
-                    note.status = obj['status']
-                else:
-                    note.status = ''
-                db.session.add(note)
-                db.session.commit()
-
-                if kind == 'DesignIdea' and is_note_in_aces(note):
-                    print "adding a design idea card to trello."
-                    card = trello_api.add_card(note.id, content, note.to_trello_desc(), note.status, use_default_list=True)
-                    if card:
-                        note.trello_card_id = card.id
-                        db.session.commit()
+    if request.method == 'POST':
+        obj = request.form    
+        requesting_user = validate_credentials(obj)
+        if requesting_user is not None and username == requesting_user.username:
+            if username and obj and 'content' in obj and 'context' in obj and 'kind' in obj:
+                content = obj['content']
+                context = obj['context']            
+                kind = obj['kind']            
+                a = Account.query.filter_by(username=username).first()
+                c = Context.query.filter_by(name=context).first()
+                if a and c:
+                    note = Note(a.id, c.id, kind, content)
+                    a.modified_at = datetime.now()
+                    if 'longitude' in obj and 'latitude' in obj:
+                        note.longitude = obj['longitude']
+                        note.latitude = obj['latitude']
+                    if 'status' in obj:
+                        note.status = obj['status']
                     else:
-                        print "could not create design idea card in trello."
-                return success(note.to_hash())
-		return error("some parameters are missing")
-	else:
-		return error("the request must be a post")
+                        note.status = ''
+                    db.session.add(note)
+                    db.session.commit()
+    
+                    if kind == 'DesignIdea' and is_note_in_aces(note):
+                        print "adding a design idea card to trello."
+                        card = trello_api.add_card(note.id, content, note.to_trello_desc(), note.status, use_default_list=True)
+                        if card:
+                            note.trello_card_id = card.id
+                            db.session.commit()
+                        else:
+                            print "could not create design idea card in trello."
+                    return success(note.to_hash())
+            return error("some parameters are missing")
+        return auth_error()
+    else:
+        return error("the request must be a post")
 
 #
 # Media
@@ -485,23 +527,23 @@ def api_note_create(username):
 @app.route('/api/medias')
 @crossdomain(origin='*')
 def api_media_list():
-	medias = Media.query.all()
-	return success([x.to_hash() for x in medias])
+    medias = Media.query.all()
+    return success([x.to_hash() for x in medias])
 
 @app.route('/api/media/<id>')
 @crossdomain(origin='*')
 def api_media_get(id):
-	media = Media.query.get(id)
-	if media:
-		return success(media.to_hash())
-	else:
-		return error("media object does not exist")
+    media = Media.query.get(id)
+    if media:
+        return success(media.to_hash())
+    else:
+        return error("media object does not exist")
 
 @app.route('/api/media/<id>/feedbacks')
 @crossdomain(origin='*')
 def api_media_get_feedbacks(id):
-	feedbacks = Feedback.query.filter(Feedback.table_name.ilike('media'), Feedback.row_id==id).all()
-	return success([x.to_hash() for x in feedbacks])
+    feedbacks = Feedback.query.filter(Feedback.table_name.ilike('media'), Feedback.row_id==id).all()
+    return success([x.to_hash() for x in feedbacks])
 
 from werkzeug.utils import secure_filename
 
@@ -523,45 +565,49 @@ def api_media_create(id):
             title = request.form.get("title","")#files["title"] or request.form["title"] or ""
             kind = "Photo"
             note = Note.query.get(id)
-            if note:
-                media = Media(note.id, kind, title, link)
-                file = request.files.get("file",None)
-                if not file:
-                    print "No file provided."
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    # #print "saving locally to " + filename
-                    response = cloudinary.uploader.upload(file, public_id = media.id)
-                    # print "uploading to cloudinary .."
-                    if response:
-                        # print response['url']
-                        media.link = response['url']
-                db.session.add(media)
-                note.status = str(note.created_at.date())
-                note.modified_at = datetime.now()
-                db.session.commit()
-
-                if is_note_in_aces(note):
-                
-                    # send notification
-                    notification.send_new_note_notification_email(note, media, True)
-                
-                    print "Adding card to trello... link: ", media.link
-                    feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-                    new_desc = find_location_for_note(note)
-                    if len(new_desc) > 0:
-                        new_desc = "location: " + new_desc + "\r\n"
-                    new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
-
-                    if len(note.content) == 0:
-                        card = trello_api.add_card_with_attachment(note.id, "[no description]", new_desc, note.status, media.get_url())
-                    else:
-                        card = trello_api.add_card_with_attachment(note.id, note.content, new_desc, note.status, media.get_url())
-                    if card:
-                        note.trello_card_id = card.id
-                        db.session.commit()
-                return success(media.to_hash())
+            if note is not None:
+                requesting_user = validate_credentials(request.form)
+                if requesting_user is not None and note.account.username == requesting_user.username:
+                    media = Media(note.id, kind, title, link)
+                    file = request.files.get("file",None)
+                    if not file:
+                        print "No file provided."
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        #file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                        # #print "saving locally to " + filename
+                        response = cloudinary.uploader.upload(file, public_id = media.id)
+                        # print "uploading to cloudinary .."
+                        if response:
+                            # print response['url']
+                            media.link = response['url']
+                    db.session.add(media)
+                    note.status = str(note.created_at.date())
+                    note.modified_at = datetime.now()
+                    db.session.commit()
+    
+                    if is_note_in_aces(note):
+                    
+                        # send notification
+                        notification.send_new_note_notification_email(note, media, True)
+                    
+                        print "Adding card to trello... link: ", media.link
+                        feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+                        new_desc = find_location_for_note(note)
+                        if len(new_desc) > 0:
+                            new_desc = "location: " + new_desc + "\r\n"
+                        new_desc = new_desc + note.to_trello_desc() + "\r\n#likes: " + str(len(feedbacks_like))# + "\r\n#comments: " + str(len(feedbacks_comment))
+    
+                        if len(note.content) == 0:
+                            card = trello_api.add_card_with_attachment(note.id, "[no description]", new_desc, note.status, media.get_url())
+                        else:
+                            card = trello_api.add_card_with_attachment(note.id, note.content, new_desc, note.status, media.get_url())
+                        if card:
+                            note.trello_card_id = card.id
+                            db.session.commit()
+                    return success(media.to_hash())
+                else:
+                    return auth_error()
             else:
                 return error("note id %d is invalid" % id)
         else:
@@ -576,36 +622,36 @@ def api_media_create(id):
 @app.route('/api/contexts')
 @crossdomain(origin='*')
 def api_context_list_all():
-	contexts = Context.query.all()
-	return success([x.to_hash() for x in contexts])
+    contexts = Context.query.all()
+    return success([x.to_hash() for x in contexts])
 
 @app.route('/api/context/<id>')
 @crossdomain(origin='*')
 def api_context_get(id):
-	context = Context.query.get(id)
-	return success(context.to_hash())	
+    context = Context.query.get(id)
+    return success(context.to_hash())    
 
 @app.route('/api/context/<id>/notes')
 @crossdomain(origin='*')
 def api_context_get_all_notes(id):
-	context = Context.query.get(id)
-	if context:
-		items = context.notes
-		return success([x.to_hash() for x in items])
+    context = Context.query.get(id)
+    if context:
+        items = context.notes
+        return success([x.to_hash() for x in items])
 
 
 @app.route('/api/context/activities')
 @crossdomain(origin='*')
 def api_context_get_all_activities():
-	items = Context.query.filter(Context.kind.ilike('activity')).all()
-	return success([x.to_hash() for x in items])
+    items = Context.query.filter(Context.kind.ilike('activity')).all()
+    return success([x.to_hash() for x in items])
 
 @app.route('/api/context/landmarks')
 @crossdomain(origin='*')
 def api_context_get_all_landmarks():
-	items = Context.query.filter(Context.kind.ilike('landmark')).all()
-	return success([x.to_hash() for x in items])
-
+    items = Context.query.filter(Context.kind.ilike('landmark')).all()
+    return success([x.to_hash() for x in items])
+'''
 @app.route('/api/context/<id>/update', methods = ['POST'])
 @crossdomain(origin='*')
 def api_context_update(id):
@@ -620,20 +666,22 @@ def api_context_update(id):
         db.session.commit()
         return success(context.to_hash())
     return error("some parameters are missing")
-
+'''
+'''
 @app.route('/api/context/<id>/delete', methods = ['GET'])
 @crossdomain(origin='*')
 def api_context_delete(id):
-	# id = request.form.get('id','')
-	context = Context.query.get(id)
-	if context:
-		print "deleting %s " % context.to_hash()
-		db.session.delete(context)
-		db.session.commit()
-		return success({})
-	else:
-		return error("context does not exist")
-
+    # id = request.form.get('id','')
+    context = Context.query.get(id)
+    if context:
+        print "deleting %s " % context.to_hash()
+        db.session.delete(context)
+        db.session.commit()
+        return success({})
+    else:
+        return error("context does not exist")
+'''
+'''
 @app.route('/api/context/new/activity/at/<site_name>', methods = ['POST'])
 @crossdomain(origin='*')
 def api_context_add_activity(site_name):
@@ -655,7 +703,7 @@ def api_context_add_activity(site_name):
         return success(new_context.to_hash())
     else:
         return error("title or description for the activity not provided.")
-
+'''
 @app.route('/api/context/active/activities/at/<site_name>', methods = ['GET'])
 @crossdomain(origin='*')
 def api_context_active_activities_at_site(site_name):
@@ -681,30 +729,29 @@ def api_context_active_designideas_at_site(site_name):
 @app.route('/api/feedbacks')
 @crossdomain(origin='*')
 def api_feedbacks_list_all():
-	feedbacks = Feedback.query.all()
-	return success([x.to_hash() for x in feedbacks])
+    feedbacks = Feedback.query.all()
+    return success([x.to_hash() for x in feedbacks])
 
 @app.route('/api/feedback/<id>')
 @crossdomain(origin='*')
 def api_feedback_get(id):
-	feedback = Feedback.query.get(id)
-	return success(feedback.to_hash())	
+    feedback = Feedback.query.get(id)
+    return success(feedback.to_hash())    
 
 
 @app.route('/api/feedback/<id>/update', methods = ['POST'])
 @crossdomain(origin='*')
 def api_feedback_update(id):
-	obj = request.form
-	username = obj.get('username', '')
-	account = Account.query.filter_by(username=username).first()
-	feedback = Feedback.query.get(id)
-	if feedback and account:
-		feedback.content = obj.get('content', feedback.content)
-		feedback.kind = obj.get('kind', feedback.kind)
-		feedback.modified_at = datetime.now()
-		db.session.commit()
-		return success(feedback.to_hash())
-	return error("some parameters are missing")	
+    obj = request.form
+    requesting_user = validate_credentials(request.form)
+    feedback = Feedback.query.get(id)
+    if feedback is not None and requesting_user is not None and feedback.account.username == requesting_user.username:
+        feedback.content = obj.get('content', feedback.content)
+        feedback.kind = obj.get('kind', feedback.kind)
+        feedback.modified_at = datetime.now()
+        db.session.commit()
+        return success(feedback.to_hash())
+    return error("some parameters are missing")    
 
 @app.route('/api/feedback/new/<kind>/for/<model>/<id>/by/<username>',methods = ['POST', 'GET'])
 @crossdomain(origin='*')
@@ -712,62 +759,70 @@ def api_feedback_add_to_note(kind,model,id,username):
     if request.method == 'POST':
         account = Account.query.filter_by(username=username).first()
         target = Feedback.resolve_target(model,id)
-        print "adding feedback [%s] about [%s] by user [%s]" % (kind, target, username)
-        try:
-            if target and account:
-                content = request.form.get('content','')
-                #print "content: ", content
-                if content == '':
-                    return error("Content cannot be empty.")
-                parent_id = request.form.get('parent_id',0)
-                table_name = target.__class__.__name__
-                row_id = id
-                feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
-                db.session.add(feedback)
-                db.session.commit()
-                if model.lower() == 'note':
-                    #if target.kind == 'DesignIdea':
-                    feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
-                    feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
-                    new_desc = find_location_for_note(target)
-                    if len(new_desc) > 0:
-                        new_desc = "location: " + new_desc + "\r\n"
-                    trello_api.update_card(target.id, target.content, new_desc + target.to_trello_desc() + "\r\n#likes: " + \
-                                       str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
-                    if kind.lower() == 'comment':
-                        account_username = "The Design Team"
-                        if account.username != 'default':
-                            account_username = account.username
-                        trello_api.add_comment_card(target.id, target.content, content)
-                return success(feedback.to_hash())
-            return error("something wrong")
-        except:
-            print traceback.format_exc()
+        requesting_user = validate_credentials(request.form)
+        if requesting_user is not None and account.username == requesting_user.username:
+            print "adding feedback [%s] about [%s] by user [%s]" % (kind, target, username)
+            try:
+                if target and account:
+                    content = request.form.get('content','')
+                    #print "content: ", content
+                    if content == '':
+                        return error("Content cannot be empty.")
+                    parent_id = request.form.get('parent_id',0)
+                    table_name = target.__class__.__name__
+                    row_id = id
+                    feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
+                    db.session.add(feedback)
+                    db.session.commit()
+                    if model.lower() == 'note':
+                        #if target.kind == 'DesignIdea':
+                        feedbacks_comment = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='comment').all()
+                        feedbacks_like = Feedback.query.filter(Feedback.table_name.ilike('note'), Feedback.row_id==id, Feedback.kind=='like').all()
+                        new_desc = find_location_for_note(target)
+                        if len(new_desc) > 0:
+                            new_desc = "location: " + new_desc + "\r\n"
+                        trello_api.update_card(target.id, target.content, new_desc + target.to_trello_desc() + "\r\n#likes: " + \
+                                        str(len(feedbacks_like)))# + "\r\n#comments: " + str(len(feedbacks_comment)))
+                        if kind.lower() == 'comment':
+                            account_username = "The Design Team"
+                            if account.username != 'default':
+                                account_username = account.username
+                            trello_api.add_comment_card(target.id, target.content, content)
+                    return success(feedback.to_hash())
+                return error("something wrong")
+            except:
+                print traceback.format_exc()
+        else:
+            return auth_error()
     else:
-		return error("add feedback to note [%s] by [%s], this operation must be done through a post" %
-			(id, username))
+        return error("add feedback to note [%s] by [%s], this operation must be done through a post" %
+            (id, username))
 
 @app.route('/api/media/<id>/feedback/<username>/new/comment',methods = ['POST','GET'])
 @crossdomain(origin='*')
 def api_feedback_add_to_media(id,username):
-	if request.method == 'POST':
-		media = Media.query.get(id)
-		account = Account.query.filter_by(username=username).first()
-		if media and account and 'content' in request.form:
-			kind = "comment"
-			content = request.form['content']
-			table_name = "media"
-			row_id = id
-			parent_id = request.form.get('parent_id',0)
-			feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
-			db.session.add(feedback)
-			db.session.commit()	
-			return success(feedback.to_hash())	
-
-		return success({'success': False})	
-	else:
-		return error("add feedback to media [%s] by [%s], this operation must be done through a post" %
-			(id, username))
+    if request.method == 'POST':
+        media = Media.query.get(id)
+        account = Account.query.filter_by(username=username).first()
+        requesting_user = validate_credentials(request.form)
+        if requesting_user is not None and account.username == requesting_user.username:
+            if media is not None and account and 'content' in request.form:
+                kind = "comment"
+                content = request.form['content']
+                table_name = "media"
+                row_id = id
+                parent_id = request.form.get('parent_id',0)
+                feedback = Feedback(account.id, kind, content, table_name, row_id, parent_id)
+                db.session.add(feedback)
+                db.session.commit()    
+                return success(feedback.to_hash())
+            else:    
+                return success({'success': False})
+        else:
+            return auth_error()
+    else:
+        return error("add feedback to media [%s] by [%s], this operation must be done through a post" %
+            (id, username))
 
 
 
@@ -777,27 +832,27 @@ def api_feedback_add_to_media(id,username):
 @app.route('/api/site/<name>')
 @crossdomain(origin='*')
 def api_site_get(name):
-	site = Site.query.filter_by(name=name).first()	
-	if site:
-		return success(site.to_hash())
-	else:
-		return error("site does not exist")
+    site = Site.query.filter_by(name=name).first()    
+    if site:
+        return success(site.to_hash())
+    else:
+        return error("site does not exist")
 
 @app.route('/api/site/<name>/long')
 @crossdomain(origin='*')
 def api_site_get_long(name):
-	site = Site.query.filter_by(name=name).first()	
-	if site:
-		h = site.to_hash()
-		h['contexts'] = [c.to_hash() for c in site.contexts]
-		return success(h)
-	else:
-		return error("site does not exist")
+    site = Site.query.filter_by(name=name).first()    
+    if site:
+        h = site.to_hash()
+        h['contexts'] = [c.to_hash() for c in site.contexts]
+        return success(h)
+    else:
+        return error("site does not exist")
 
 @app.route('/api/site/<name>/active/activities')
 @crossdomain(origin='*')
 def api_site_get_active_activities(name):
-    site = Site.query.filter_by(name=name).first()	
+    site = Site.query.filter_by(name=name).first()    
     if site:
         h = site.to_hash() 
         activities = get_active_contexts(site.id, 'activity')
@@ -809,7 +864,7 @@ def api_site_get_active_activities(name):
 @app.route('/api/site/<name>/active/designideas')
 @crossdomain(origin='*')
 def api_site_get_active_designideas(name):
-    site = Site.query.filter_by(name=name).first()	
+    site = Site.query.filter_by(name=name).first()    
     if site:
         h = site.to_hash() 
         designideas = get_active_contexts(site.id, 'design')
@@ -821,34 +876,34 @@ def api_site_get_active_designideas(name):
 @app.route('/api/site/<name>/notes')
 @crossdomain(origin='*')
 def api_site_get_notes(name):
-	site = Site.query.filter_by(name=name).first()
-	if site:
-		notes = []
-		for c in site.contexts:
-			notes += c.notes
-		return success([x.to_hash() for x in notes])
-	else:
-		return error("site does not exist")
+    site = Site.query.filter_by(name=name).first()
+    if site:
+        notes = []
+        for c in site.contexts:
+            notes += c.notes
+        return success([x.to_hash() for x in notes])
+    else:
+        return error("site does not exist")
 
 @app.route('/api/site/<name>/notes/<username>')
 @crossdomain(origin='*')
 def api_site_get_notes_user(name,username):
-	site = Site.query.filter_by(name=name).first()
-	account = Account.query.filter_by(username=username).first()
-	if site and account:
-		all_notes = []
-		for c in site.contexts:
-			notes = Note.query.filter_by(account_id=account.id, context_id=c.id).all()
-			all_notes += notes
-		return success([x.to_hash() for x in all_notes])
-	else:
-		return error("site does not exist")
+    site = Site.query.filter_by(name=name).first()
+    account = Account.query.filter_by(username=username).first()
+    if site and account:
+        all_notes = []
+        for c in site.contexts:
+            notes = Note.query.filter_by(account_id=account.id, context_id=c.id).all()
+            all_notes += notes
+        return success([x.to_hash() for x in all_notes])
+    else:
+        return error("site does not exist")
 
 @app.route('/api/sites')
 @crossdomain(origin='*')
 def api_site_list():
-	sites = Site.query.all()
-	return success([x.to_hash() for x in sites])
+    sites = Site.query.all()
+    return success([x.to_hash() for x in sites])
 
 @app.route('/api/site/<name>/contexts')
 @crossdomain(origin='*')
@@ -871,19 +926,20 @@ def api_site_list_contexts(name):
 #
 # Sync
 #
+'''
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>')
 @crossdomain(origin='*')
 def api_sync_account_since_minute(year,month,date,hour,minute):
-	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
-	accounts = Account.query.filter(Account.created_at  >= since_date).all()
-	return sync_success([x.to_hash() for x in accounts])
+    since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+    accounts = Account.query.filter(Account.created_at  >= since_date).all()
+    return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/webaccounts/created/since/<year>/<month>/<date>/<hour>/<minute>')
 @crossdomain(origin='*')
 def api_sync_webaccount_since_minute(year,month,date,hour,minute):
-	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
-	accounts = WebAccount.query.filter(WebAccount.created_at  >= since_date).all()
-	return sync_success([x.to_hash() for x in accounts])
+    since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+    accounts = WebAccount.query.filter(WebAccount.created_at  >= since_date).all()
+    return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/accounts/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
 @crossdomain(origin='*')
@@ -908,9 +964,9 @@ def api_sync_site_account_since_minute(site,year,month,date,hour,minute):
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>')
 @crossdomain(origin='*')
 def api_sync_notes_since_minute(year,month,date,hour,minute):
-	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
-	notes = Note.query.filter(Note.created_at  >= since_date).all()
-	return sync_success([x.to_hash() for x in notes])
+    since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+    notes = Note.query.filter(Note.created_at  >= since_date).all()
+    return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/notes/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
 @crossdomain(origin='*')
@@ -974,9 +1030,9 @@ def api_sync_site_feedback_since_minute(site,year,month,date,hour,minute):
 @app.route('/api/sync/feedbacks/created/since/<year>/<month>/<date>/<hour>/<minute>')
 @crossdomain(origin='*')
 def api_sync_feedback_since_minute(year,month,date,hour,minute):
-	since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
-	items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
-	return sync_success(add_timestamp_txt([x.to_hash() for x in items]))
+    since_date = datetime(int(year),int(month),int(date),int(hour),int(minute))
+    items = Feedback.query.filter(Feedback.created_at  >= since_date).all()
+    return sync_success(add_timestamp_txt([x.to_hash() for x in items]))
 
 
 @app.route('/api/sync/interactions/created/since/<year>/<month>/<date>/<hour>/<minute>/at/<site>')
@@ -992,28 +1048,28 @@ def api_sync_interactions_since_minute(year,month,date,hour,minute,site):
 
 @app.route('/api/sync/accounts/created/recent/<n>')
 @crossdomain(origin='*')
-def api_sync_account_recent(n):	
-	accounts = Account.query.filter().order_by(Account.created_at.desc()).limit(n)
-	return sync_success([x.to_hash() for x in accounts])
+def api_sync_account_recent(n):    
+    accounts = Account.query.filter().order_by(Account.created_at.desc()).limit(n)
+    return sync_success([x.to_hash() for x in accounts])
 
 @app.route('/api/sync/notes/created/recent/<n>')
 @crossdomain(origin='*')
-def api_sync_note_recent(n):	
-	notes = Note.query.filter().order_by(Note.created_at.desc()).limit(n)
-	return sync_success([x.to_hash() for x in notes])
+def api_sync_note_recent(n):    
+    notes = Note.query.filter().order_by(Note.created_at.desc()).limit(n)
+    return sync_success([x.to_hash() for x in notes])
 
 @app.route('/api/sync/feedbacks/created/recent/<n>')
 @crossdomain(origin='*')
-def api_sync_feedback_recent(n):	
-	feedbacks = Feedback.query.filter().order_by(Feedback.created_at.desc()).limit(n)
-	return sync_success([x.to_hash() for x in feedbacks])
+def api_sync_feedback_recent(n):    
+    feedbacks = Feedback.query.filter().order_by(Feedback.created_at.desc()).limit(n)
+    return sync_success([x.to_hash() for x in feedbacks])
 
 @app.route('/api/sync/interactions/created/recent/<n>')
 @crossdomain(origin='*')
 def api_sync_interactions_recent(n):
-	interactions = InteractionLog.query.filter().order_by(InteractionLog.created_at.desc()).limit(n)
-	return sync_success([x.to_hash() for x in interactions])
-
+    interactions = InteractionLog.query.filter().order_by(InteractionLog.created_at.desc()).limit(n)
+    return sync_success([x.to_hash() for x in interactions])
+'''
 #
 # Sync with Trello
 #
@@ -1333,13 +1389,13 @@ def trello_comment_updated(action_data, the_card):
 #
 
 def sync_success(x):
-	return success(add_timestamp_txt(x))
+    return success(add_timestamp_txt(x))
 
 def add_timestamp_txt(items):
-	for item in items:
-		ts = item['created_at']
-		item['created_at_debug'] = ts.strftime('%Y/%m/%d/%H/%M')
-	return items
+    for item in items:
+        ts = item['created_at']
+        item['created_at_debug'] = ts.strftime('%Y/%m/%d/%H/%M')
+    return items
 
 def get_or_create_webaccount_from_trello_data(action):
     if 'memberCreator' in action:

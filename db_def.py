@@ -76,6 +76,9 @@ class Account(db.Model):
             'id': self.id,
             'username': self.username,
             'icon_url': self.icon_url,
+            'name': self.name,
+            'modified_at': self.modified_at,
+            'created_at': self.created_at,
             'affiliation': self.affiliation
         }
 
